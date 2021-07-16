@@ -4,8 +4,8 @@ htmlcov/
 .vscode
 
 # Pipenv
-requirements.txt
 .venv
+.venvln
 
 
 *.py[cod]
