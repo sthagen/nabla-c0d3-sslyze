@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 class _CertificateInfoCliConnector(
     ScanCommandCliConnector["CertificateInfoScanResult", "CertificateInfoExtraArgument"]
 ):
-
     _cli_option = "certinfo"
     _cli_description = "Retrieve and analyze a server's certificate(s) to verify its validity."
 
@@ -101,13 +100,6 @@ class _CertificateInfoCliConnector(
         deployment_as_txt.append("")
         deployment_as_txt.append(cls._format_subtitle(f"Certificate #{index} - Trust"))
 
-        hostname_validation_text = (
-            "OK - Certificate matches server hostname"
-            if cert_deployment.leaf_certificate_subject_matches_hostname
-            else "FAILED - Certificate does NOT match server hostname"
-        )
-        deployment_as_txt.append(cls._format_field("Hostname Validation:", hostname_validation_text))
-
         # Path validation that was successfully tested
         for path_result in cert_deployment.path_validation_results:
             if path_result.was_validation_successful:
@@ -118,7 +110,7 @@ class _CertificateInfoCliConnector(
                 path_txt = f"OK - Certificate is trusted{ev_txt}"
 
             else:
-                path_txt = f"FAILED - Certificate is NOT Trusted: {path_result.openssl_error_string}"
+                path_txt = f"FAILED - Certificate is NOT Trusted: {path_result.validation_error}"
 
             deployment_as_txt.append(
                 cls._format_field(
@@ -277,8 +269,8 @@ class _CertificateInfoCliConnector(
             cls._format_field("Common Name:", _get_subject_as_short_text(certificate)),
             cls._format_field("Issuer:", _get_issuer_as_short_text(certificate)),
             cls._format_field("Serial Number:", str(certificate.serial_number)),
-            cls._format_field("Not Before:", certificate.not_valid_before.date().isoformat()),
-            cls._format_field("Not After:", certificate.not_valid_after.date().isoformat()),
+            cls._format_field("Not Before:", certificate.not_valid_before_utc.date().isoformat()),
+            cls._format_field("Not After:", certificate.not_valid_after_utc.date().isoformat()),
             cls._format_field("Public Key Algorithm:", certificate.public_key().__class__.__name__),
         ]
 

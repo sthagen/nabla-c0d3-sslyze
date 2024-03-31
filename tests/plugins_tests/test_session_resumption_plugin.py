@@ -7,6 +7,7 @@ from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportScanResult,
     SessionResumptionSupportExtraArgument,
 )
+from sslyze.plugins.session_resumption.json_output import SessionResumptionSupportScanResultAsJson
 
 from sslyze.server_setting import (
     ServerNetworkLocation,
@@ -19,25 +20,52 @@ from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, Lega
 
 
 class TestSessionResumptionSupport:
-    def test(self) -> None:
-        # Given a server that supports session resumption with both TLS tickets and session IDs
+    @can_only_run_on_linux_64
+    def test_resumption_with_session_ids(self) -> None:
+        # Given a server that supports session resumption with session IDs
+        with ModernOpenSslServer() as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            network_config = ServerNetworkConfiguration(
+                tls_server_name_indication=server.hostname,
+            )
+            server_info = check_connectivity_to_server_and_return_info(server_location, network_config)
+
+            # When testing for resumption, it succeeds
+            result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(server_info)
+
+        # And it confirms that resumption with session IDs is supported
+        assert result.session_id_resumption_result == TlsResumptionSupportEnum.FULLY_SUPPORTED
+        assert result.session_id_attempted_resumptions_count
+        assert result.session_id_successful_resumptions_count
+
+        # And a CLI output can be generated
+        assert SessionResumptionSupportImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = SessionResumptionSupportScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
+
+    def test_resumption_with_tls_tickets(self) -> None:
+        # Given a server that supports session resumption with TLS tickets
         server_location = ServerNetworkLocation("www.google.com", 443)
         server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When testing for resumption, it succeeds
         result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(server_info)
 
-        # And it confirms that both session IDs and TLS tickets are supported
-        assert result.session_id_resumption_result == TlsResumptionSupportEnum.FULLY_SUPPORTED
-        assert result.session_id_attempted_resumptions_count
-        assert result.session_id_successful_resumptions_count
-
+        # And it confirms that TLS tickets are supported
         assert result.tls_ticket_resumption_result == TlsResumptionSupportEnum.FULLY_SUPPORTED
         assert result.tls_ticket_attempted_resumptions_count
         assert result.tls_ticket_successful_resumptions_count
 
         # And a CLI output can be generated
         assert SessionResumptionSupportImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = SessionResumptionSupportScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
 
     def test_with_extra_argument(self) -> None:
         # Given a server that supports session resumption with both TLS tickets and session IDs
@@ -62,6 +90,10 @@ class TestSessionResumptionSupport:
 
         # And a CLI output can be generated
         assert SessionResumptionSupportImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = SessionResumptionSupportScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
 
     @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed(self):

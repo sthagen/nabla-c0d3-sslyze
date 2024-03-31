@@ -4,13 +4,8 @@ from http.client import HTTPResponse
 from dataclasses import dataclass, asdict
 from traceback import TracebackException
 from urllib.parse import urlsplit
+from pydantic import BaseModel, model_validator
 
-try:
-    # pydantic 2.x
-    from pydantic.v1 import BaseModel  # TODO(#617): Remove v1
-except ImportError:
-    # pydantic 1.x
-    from pydantic import BaseModel  # type: ignore
 
 # TODO: Fix type annotations in nassl
 from nassl._nassl import SslError  # type: ignore
@@ -29,25 +24,9 @@ from sslyze.plugins.plugin_base import (
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
 from sslyze.connection_helpers.http_response_parser import HttpResponseParser, NotAValidHttpResponseError
-from typing import List, Optional
-
+from typing import List, Optional, Any
 
 _logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class ExpectCtHeader:
-    """An Expect-CT header parsed from a server's HTTP response.
-
-    Attributes:
-        max-age: The content of the max-age field.
-        report-uri: The content of report-uri field.
-        enforce: True if enforce directive is set.
-    """
-
-    max_age: Optional[int]
-    report_uri: Optional[str]
-    enforce: bool
 
 
 @dataclass(frozen=True)
@@ -78,8 +57,6 @@ class HttpHeadersScanResult(ScanCommandResult):
             all the subsequent fields will be ``None`` as SSLyze did not receive a valid HTTP response from the server.
         http_path_redirected_to: The path SSLyze was eventually redirected to after sending the initial HTTP request.
         strict_transport_security_header: The Strict-Transport-Security header returned by the server.
-        expect_ct_header: DEPRECATED - will always be ``None``. This is because the Expect-CT header has officially
-            been deprecated.
     """
 
     http_request_sent: str
@@ -87,7 +64,6 @@ class HttpHeadersScanResult(ScanCommandResult):
 
     http_path_redirected_to: Optional[str]
     strict_transport_security_header: Optional[StrictTransportSecurityHeader]
-    expect_ct_header: None = None  # TODO(6.0.0): Remove as this is a deprecated field
 
 
 class _StrictTransportSecurityHeaderAsJson(BaseModel):
@@ -106,10 +82,14 @@ class HttpHeadersScanResultAsJson(BaseModelWithOrmMode):
 
     http_path_redirected_to: Optional[str]
     strict_transport_security_header: Optional[_StrictTransportSecurityHeaderAsJson]
-    expect_ct_header: None = None  # TODO(6.0.0): Remove as this is a deprecated field
 
+    @model_validator(mode="before")
     @classmethod
-    def from_orm(cls, result: HttpHeadersScanResult) -> "HttpHeadersScanResultAsJson":
+    def _handle_object(cls, data: Any) -> Any:
+        if not isinstance(data, HttpHeadersScanResult):
+            return data
+
+        result: HttpHeadersScanResult = data
         http_error_trace_as_str = None
         if result.http_error_trace:
             http_error_trace_as_str = ""
@@ -120,7 +100,7 @@ class HttpHeadersScanResultAsJson(BaseModelWithOrmMode):
         if result.strict_transport_security_header:
             sts_header_json = _StrictTransportSecurityHeaderAsJson(**asdict(result.strict_transport_security_header))
 
-        return cls(
+        return dict(
             http_request_sent=result.http_request_sent,
             http_error_trace=http_error_trace_as_str,
             http_path_redirected_to=result.http_path_redirected_to,
@@ -137,7 +117,6 @@ class HttpHeadersScanAttemptAsJson(ScanCommandAttemptAsJson):
 
 
 class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, None]):
-
     _cli_option = "http_headers"
     _cli_description = "Test a server for the presence of security-related HTTP headers."
 

@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Appendix: Scan Commands &#8212; SSLyze 5.2.0 documentation</title>
+    <title>Appendix: Scan Commands &#8212; SSLyze 6.0.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
-    <script src="_static/documentation_options.js?v=2dde5210"></script>
+    <script src="_static/documentation_options.js?v=12958129"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -205,7 +205,7 @@ certificates depending on the client, as a way to maximize compatibility with ol
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.CertificateDeploymentAnalysisResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CertificateDeploymentAnalysisResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">received_certificate_chain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_subject_matches_hostname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_has_must_staple_extension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_is_ev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_signed_certificate_timestamps_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">received_chain_contains_anchor_certificate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">received_chain_has_valid_order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_validation_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verified_chain_has_sha1_signature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verified_chain_has_legacy_symantec_anchor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ocsp_response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ocsp_response_is_trusted</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CertificateDeploymentAnalysisResult" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CertificateDeploymentAnalysisResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">received_certificate_chain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_has_must_staple_extension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_is_ev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_signed_certificate_timestamps_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">received_chain_contains_anchor_certificate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">received_chain_has_valid_order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_validation_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verified_chain_has_sha1_signature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verified_chain_has_legacy_symantec_anchor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ocsp_response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ocsp_response_is_trusted</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CertificateDeploymentAnalysisResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of analyzing a server’s certificate to verify its validity.</p>
 <p>Any certificate available within the fields that follow is parsed as a <code class="docutils literal notranslate"><span class="pre">Certificate</span></code> object using the cryptography
 module; documentation is available at
@@ -230,15 +230,10 @@ packaged within SSLyze. Will be <code class="docutils literal notranslate"><span
 <span class="sig-name descname"><span class="pre">path_validation_results</span></span><a class="headerlink" href="#sslyze.CertificateDeploymentAnalysisResult.path_validation_results" title="Link to this definition">¶</a></dt>
 <dd><p>The result of validating the server’s
 certificate chain using each trust store that is packaged with SSLyze (Mozilla, Apple, etc.).
-If for a given trust store, the validation was successful, the verified certificate chain built by OpenSSL
-can be retrieved from the <code class="docutils literal notranslate"><span class="pre">PathValidationResult</span></code>.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="sslyze.CertificateDeploymentAnalysisResult.leaf_certificate_subject_matches_hostname">
-<span class="sig-name descname"><span class="pre">leaf_certificate_subject_matches_hostname</span></span><a class="headerlink" href="#sslyze.CertificateDeploymentAnalysisResult.leaf_certificate_subject_matches_hostname" title="Link to this definition">¶</a></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the leaf certificate’s Common Name or Subject Alternative
-Names match the server’s hostname.</p>
+If for a given trust store, the validation was successful, the verified certificate chain can be</p>
+<blockquote>
+<div><p>retrieved from the <code class="docutils literal notranslate"><span class="pre">PathValidationResult</span></code>.</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py attribute">
@@ -313,7 +308,6 @@ available at
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>received_certificate_chain</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Certificate</span></code>]) – </p></li>
-<li><p><strong>leaf_certificate_subject_matches_hostname</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – </p></li>
 <li><p><strong>leaf_certificate_has_must_staple_extension</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – </p></li>
 <li><p><strong>leaf_certificate_is_ev</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – </p></li>
 <li><p><strong>leaf_certificate_signed_certificate_timestamps_count</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – </p></li>
@@ -331,7 +325,7 @@ available at
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.PathValidationResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">PathValidationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trust_store</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verified_certificate_chain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">openssl_error_string</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.PathValidationResult" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">PathValidationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trust_store</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verified_certificate_chain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_error</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.PathValidationResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of trying to validate a server’s certificate chain using a specific trust store.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.PathValidationResult.trust_store">
@@ -350,9 +344,9 @@ Each certificate is parsed using the cryptography module; documentation is avail
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sslyze.PathValidationResult.openssl_error_string">
-<span class="sig-name descname"><span class="pre">openssl_error_string</span></span><a class="headerlink" href="#sslyze.PathValidationResult.openssl_error_string" title="Link to this definition">¶</a></dt>
-<dd><p>The result string returned by OpenSSL’s validation function; None if validation was
+<dt class="sig sig-object py" id="sslyze.PathValidationResult.validation_error">
+<span class="sig-name descname"><span class="pre">validation_error</span></span><a class="headerlink" href="#sslyze.PathValidationResult.validation_error" title="Link to this definition">¶</a></dt>
+<dd><p>The error returned by the cryptography module’s validation function; None if validation was
 successful.</p>
 </dd></dl>
 
@@ -367,7 +361,7 @@ successful.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>trust_store</strong> (<a class="reference internal" href="#sslyze.TrustStore" title="sslyze.plugins.certificate_info.trust_stores.trust_store.TrustStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrustStore</span></code></a>) – </p></li>
 <li><p><strong>verified_certificate_chain</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Certificate</span></code>]]) – </p></li>
-<li><p><strong>openssl_error_string</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – </p></li>
+<li><p><strong>validation_error</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – </p></li>
 </ul>
 </dd>
 </dl>
@@ -421,10 +415,14 @@ successful.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sslyze.TrustStore.verify_certificate_chain">
-<span class="sig-name descname"><span class="pre">verify_certificate_chain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">certificate_chain_as_pem</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.TrustStore.verify_certificate_chain" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">verify_certificate_chain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">certificate_chain_as_pem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_hostname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.TrustStore.verify_certificate_chain" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>certificate_chain_as_pem</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – </p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>certificate_chain_as_pem</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – </p></li>
+<li><p><strong>server_hostname</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – </p></li>
+<li><p><strong>validation_time</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code>]) – </p></li>
+</ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#sslyze.PathValidationResult" title="sslyze.plugins.certificate_info.trust_stores.trust_store.PathValidationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathValidationResult</span></code></a></p>
@@ -943,7 +941,7 @@ get a more accurate measure of how often session resumption succeeds or fails wi
 <h3>Result class<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.HttpHeadersScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">HttpHeadersScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">http_request_sent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_error_trace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_path_redirected_to</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_transport_security_header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expect_ct_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.HttpHeadersScanResult" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">HttpHeadersScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">http_request_sent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_error_trace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_path_redirected_to</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_transport_security_header</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.HttpHeadersScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of testing a server for the presence of security-related HTTP headers.</p>
 <p>Each HTTP header described below will be <code class="docutils literal notranslate"><span class="pre">None</span></code> if the server did not return a valid HTTP response, or if the
 server returned an HTTP response without the HTTP header.</p>
@@ -972,13 +970,6 @@ all the subsequent fields will be <code class="docutils literal notranslate"><sp
 <dd><p>The Strict-Transport-Security header returned by the server.</p>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="sslyze.HttpHeadersScanResult.expect_ct_header">
-<span class="sig-name descname"><span class="pre">expect_ct_header</span></span><a class="headerlink" href="#sslyze.HttpHeadersScanResult.expect_ct_header" title="Link to this definition">¶</a></dt>
-<dd><p>DEPRECATED - will always be <code class="docutils literal notranslate"><span class="pre">None</span></code>. This is because the Expect-CT header has officially
-been deprecated.</p>
-</dd></dl>
-
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -986,7 +977,6 @@ been deprecated.</p>
 <li><p><strong>http_error_trace</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code>]) – </p></li>
 <li><p><strong>http_path_redirected_to</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – </p></li>
 <li><p><strong>strict_transport_security_header</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#sslyze.StrictTransportSecurityHeader" title="sslyze.plugins.http_headers_plugin.StrictTransportSecurityHeader"><code class="xref py py-class docutils literal notranslate"><span class="pre">StrictTransportSecurityHeader</span></code></a>]) – </p></li>
-<li><p><strong>expect_ct_header</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>) – </p></li>
 </ul>
 </dd>
 </dl>
@@ -1020,39 +1010,6 @@ been deprecated.</p>
 <li><p><strong>max_age</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – </p></li>
 <li><p><strong>preload</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – </p></li>
 <li><p><strong>include_subdomains</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="sslyze.ExpectCtHeader">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ExpectCtHeader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_age</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enforce</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ExpectCtHeader" title="Link to this definition">¶</a></dt>
-<dd><p>An Expect-CT header parsed from a server’s HTTP response.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">max-age</span></span></dt>
-<dd><p>The content of the max-age field.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">report-uri</span></span></dt>
-<dd><p>The content of report-uri field.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="sslyze.ExpectCtHeader.enforce">
-<span class="sig-name descname"><span class="pre">enforce</span></span><a class="headerlink" href="#sslyze.ExpectCtHeader.enforce" title="Link to this definition">¶</a></dt>
-<dd><p>True if enforce directive is set.</p>
-</dd></dl>
-
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>max_age</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – </p></li>
-<li><p><strong>report_uri</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – </p></li>
-<li><p><strong>enforce</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – </p></li>
 </ul>
 </dd>
 </dl>
@@ -1192,7 +1149,7 @@ been deprecated.</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;Copyright 2023 Alban Diquet.
+      &copy;Copyright 2024 Alban Diquet.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
