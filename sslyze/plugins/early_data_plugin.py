@@ -89,7 +89,12 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
         # Perform an SSL handshake and keep the session
         ssl_connection.connect()
         # Send and receive data for the TLS session to be created
-        ssl_connection.ssl_client.write(HttpRequestGenerator.get_request(host=server_info.server_location.hostname))
+        ssl_connection.ssl_client.write(
+            HttpRequestGenerator.get_request(
+                host=server_info.server_location.hostname,
+                user_agent=server_info.network_configuration.http_user_agent,
+            )
+        )
         ssl_connection.ssl_client.read(2048)
         session = ssl_connection.ssl_client.get_session()
     except ServerRejectedTlsHandshake:
