@@ -18,7 +18,10 @@ from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionScanR
 from sslyze.plugins.openssl_cipher_suites.implementation import CipherSuitesScanResult
 from sslyze.plugins.robot.implementation import RobotScanResult
 from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
-from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanResult
+from sslyze.plugins.session_renegotiation_plugin import (
+    SessionRenegotiationScanResult,
+    SessionRenegotiationExtraArgument,
+)
 from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportScanResult,
     SessionResumptionSupportExtraArgument,
@@ -33,6 +36,7 @@ class ScanCommandsExtraArguments:
     # Field is present if extra arguments were provided for the corresponding scan command
     certificate_info: Optional[CertificateInfoExtraArgument] = None
     session_resumption: Optional[SessionResumptionSupportExtraArgument] = None
+    session_renegotiation: Optional[SessionRenegotiationExtraArgument] = None
 
 
 @dataclass(frozen=True)

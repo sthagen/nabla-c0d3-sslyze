@@ -14,11 +14,23 @@ from sslyze.plugins.plugin_base import (
     ScanCommandExtraArgument,
     ScanJob,
     ScanCommandResult,
-    ScanCommandWrongUsageError,
     ScanCommandCliConnector,
     ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
+
+
+@dataclass(frozen=True)
+class SessionRenegotiationExtraArgument(ScanCommandExtraArgument):
+    """Additional configuration for testing a server for client-initiated renegotiation.
+
+    Attributes:
+        client_renegotiation_attempts: The number of attempts to make when testing the client initiated
+            renegotiation DoS vector. If the server accepts this many attempts,
+            is_vulnerable_to_client_renegotiation_dos is set. Default: 10.
+    """
+
+    client_renegotiation_attempts: int
 
 
 @dataclass(frozen=True)
@@ -82,14 +94,16 @@ class SessionRenegotiationImplementation(ScanCommandImplementation[SessionRenego
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[SessionRenegotiationExtraArgument] = None
     ) -> List[ScanJob]:
-        if extra_arguments:
-            raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
+        client_renegotiation_attempts = extra_arguments.client_renegotiation_attempts if extra_arguments else 10
 
         return [
             ScanJob(function_to_call=_test_secure_renegotiation, function_arguments=[server_info]),
-            ScanJob(function_to_call=_test_client_renegotiation, function_arguments=[server_info]),
+            ScanJob(
+                function_to_call=_test_client_renegotiation,
+                function_arguments=[server_info, client_renegotiation_attempts],
+            ),
         ]
 
     @classmethod
@@ -147,7 +161,9 @@ def _test_secure_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_Sc
     return _ScanJobResultEnum.SUPPORTS_SECURE_RENEG, supports_secure_renegotiation
 
 
-def _test_client_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_ScanJobResultEnum, bool]:
+def _test_client_renegotiation(
+    server_info: ServerConnectivityInfo, client_renegotiation_attempts: int
+) -> Tuple[_ScanJobResultEnum, bool]:
     """Check whether the server honors session renegotiation requests."""
     # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no reneg with TLS 1.3
     if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
@@ -180,7 +196,7 @@ def _test_client_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_Sc
         try:
             # Do a reneg multiple times in a row to be 100% sure that the server has no mitigations in place
             # https://github.com/nabla-c0d3/sslyze/issues/473
-            for i in range(10):
+            for i in range(client_renegotiation_attempts):
                 ssl_connection.ssl_client.do_renegotiate()
             accepts_client_renegotiation = True
 
