@@ -8232,7 +8232,8 @@
           "error_trace": null,
           "result": {
             "supports_secure_renegotiation": true,
-            "is_vulnerable_to_client_renegotiation_dos": false
+            "is_vulnerable_to_client_renegotiation_dos": false,
+            "client_renegotiations_success_count": 0
           }
         },
         "session_resumption": {
@@ -17403,7 +17404,8 @@
           "error_trace": null,
           "result": {
             "supports_secure_renegotiation": true,
-            "is_vulnerable_to_client_renegotiation_dos": false
+            "is_vulnerable_to_client_renegotiation_dos": false,
+            "client_renegotiations_success_count": 0
           }
         },
         "session_resumption": {
