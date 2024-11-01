@@ -52,7 +52,7 @@ class TrustStore:
         self.version = version
         self.ev_oids = ev_oids
 
-        self._x509_store = Store(load_pem_x509_certificates(self.path.read_text().encode("ascii")))
+        self._x509_store = Store(load_pem_x509_certificates(self.path.read_bytes()))
 
     def is_certificate_extended_validation(self, certificate: Certificate) -> bool:
         """Is the supplied server certificate EV?"""
