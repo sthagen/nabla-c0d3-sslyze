@@ -1,15 +1,23 @@
-FROM python:3.9-slim
+# set python version
+ARG PYTHON_VERSION="3.12"
+
+FROM docker.io/python:${PYTHON_VERSION}-slim AS build
 COPY . /sslyze/
-# install latest updates as root
-RUN apt-get update \
-        && apt-get install -y sudo
+WORKDIR /sslyze
+# use a venv
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 # install sslyze based on sourcecode
-RUN python -m pip install --upgrade pip setuptools wheel
-RUN python /sslyze/setup.py install
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install .
+
+FROM docker.io/python:${PYTHON_VERSION}-slim AS run
 # set user to a non-root user sslyze
 RUN adduser --no-create-home --disabled-password --gecos "" --uid 1001 sslyze
 USER sslyze
-# restrict execution to sslyze
 WORKDIR /sslyze
-ENTRYPOINT ["python", "-m", "sslyze"]
+# copy sslyze from build stage
+COPY --from=build /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+ENTRYPOINT ["sslyze"]
 CMD ["-h"]
