@@ -2,6 +2,7 @@ import socket
 import struct
 from abc import abstractmethod, ABC
 from enum import Enum
+from smtplib import SMTP, SMTPException
 from typing import ClassVar, Optional
 
 
@@ -61,20 +62,41 @@ class _OpportunisticTlsHelper(ABC):
 class _SmtpHelper(_OpportunisticTlsHelper):
     """Perform an SMTP StartTLS negotiation."""
 
+    def __init__(self, smtp_ehlo_hostname: str):
+        self._smtp_ehlo_hostname = smtp_ehlo_hostname
+
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
-        # Get the SMTP banner
-        sock.recv(2048)
+        # SMTP parsing has some complicated areas and some unusual but legal
+        # server behavior - this code uses Python's smtplib to handle the protocol.
+        smtp = SMTP(local_hostname=self._smtp_ehlo_hostname)
+        smtp.sock = sock
 
-        # Send a EHLO and wait for the 250 status
-        sock.send(b"EHLO sslyze.scan\r\n")
-        data = sock.recv(2048)
-        if b"250 " not in data:
-            raise OpportunisticTlsError(f"SMTP EHLO was rejected: {repr(data)}")
+        try:
+            code, server_reply = smtp.getreply()
+            message = server_reply.decode()
+        except SMTPException as exc:
+            code, message = -1, str(exc)
+        if code != 220:
+            raise OpportunisticTlsError(f"Unable to find 220 service ready response: {message}")
 
-        # Send a STARTTLS
-        sock.send(b"STARTTLS\r\n")
-        if b"220" not in sock.recv(2048):
-            raise OpportunisticTlsError("SMTP STARTTLS not supported")
+        try:
+            code, server_reply = smtp.ehlo()
+            message = server_reply.decode()
+        except SMTPException as exc:
+            code, message = -1, str(exc)
+        if code != 250:
+            raise OpportunisticTlsError(f"SMTP EHLO was rejected: {message}")
+
+        if not smtp.has_extn("starttls"):
+            raise OpportunisticTlsError(f"Server does not support STARTTLS: {message}")
+
+        try:
+            code, server_reply = smtp.docmd("STARTTLS")
+            message = server_reply.decode()
+        except SMTPException as exc:
+            code, message = -1, str(exc)
+        if code != 220:
+            raise OpportunisticTlsError(f"SMTP STARTTLS rejected: {message}")
 
 
 class _XmppHelper(_OpportunisticTlsHelper):
@@ -220,14 +242,16 @@ _START_TLS_HELPER_CLASSES = {
 
 
 def get_opportunistic_tls_helper(
-    protocol: ProtocolWithOpportunisticTlsEnum, xmpp_to_hostname: Optional[str]
+    protocol: ProtocolWithOpportunisticTlsEnum, xmpp_to_hostname: Optional[str], smtp_ehlo_hostname: str
 ) -> _OpportunisticTlsHelper:
     helper_cls = _START_TLS_HELPER_CLASSES[protocol]
-    if protocol not in [ProtocolWithOpportunisticTlsEnum.XMPP, ProtocolWithOpportunisticTlsEnum.XMPP_SERVER]:
-        opportunistic_tls_helper = helper_cls()
-    else:
+    if protocol in [ProtocolWithOpportunisticTlsEnum.XMPP, ProtocolWithOpportunisticTlsEnum.XMPP_SERVER]:
         if xmpp_to_hostname is None:
             raise ValueError("Received None for xmpp_to_hostname")
         opportunistic_tls_helper = helper_cls(xmpp_to=xmpp_to_hostname)
+    elif protocol == ProtocolWithOpportunisticTlsEnum.SMTP:
+        opportunistic_tls_helper = helper_cls(smtp_ehlo_hostname)
+    else:
+        opportunistic_tls_helper = helper_cls()
 
     return opportunistic_tls_helper
