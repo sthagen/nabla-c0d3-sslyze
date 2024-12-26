@@ -206,7 +206,7 @@ class ServerNetworkConfiguration:
         else:
             if self.xmpp_to_hostname:
                 raise InvalidServerNetworkConfigurationError("Can only specify xmpp_to for the XMPP StartTLS protocol.")
-    
+
         if self.tls_opportunistic_encryption in [
             ProtocolWithOpportunisticTlsEnum.SMTP,
         ]:
@@ -217,7 +217,7 @@ class ServerNetworkConfiguration:
                 raise InvalidServerNetworkConfigurationError(
                     "Can only specify smtp_ehlo_hostname for the SMTP StartTLS protocol."
                 )
-            
+
         if self.tls_opportunistic_encryption and self.http_user_agent:
             raise InvalidServerNetworkConfigurationError(
                 "Cannot specify both tls_opportunistic_encryption and http_user_agent"
