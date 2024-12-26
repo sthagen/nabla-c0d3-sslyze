@@ -13,8 +13,8 @@ class HttpRequestGenerator:
     )
 
     DEFAULT_USER_AGENT = (
-        "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/52.0.2743.116 Safari/537.36 SSLyze/{0}".format(__version__.__version__)
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
+        " Chrome/131.0.0.0 Safari/537.36 SSLyze/{0}".format(__version__.__version__)
     )
 
     @classmethod

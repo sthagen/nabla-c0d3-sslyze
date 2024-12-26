@@ -174,7 +174,7 @@ class ServerNetworkConfiguration:
             server's hostname will be used. Should only be set if the supplied `tls_wrapped_protocol` is an
             XMPP protocol.
         http_user_agent: The User-Agent to send in HTTP requests. If not supplied, a default Chrome-like
-            is used that includes the sslyze version.
+            is used that includes SSLyze's version.
         network_timeout: The timeout (in seconds) to be used when attempting to establish a connection to the
             server.
         network_max_retries: The number of retries SSLyze will perform when attempting to establish a connection
@@ -198,11 +198,16 @@ class ServerNetworkConfiguration:
         ]:
             if not self.xmpp_to_hostname:
                 # Official workaround for frozen: https://docs.python.org/3/library/dataclasses.html#frozen-instances
-                # If no XMPP to hostname was supplied, used the ones from SNI
+                # If no XMPP to hostname was supplied, use the ones from SNI
                 object.__setattr__(self, "xmpp_to_hostname", self.tls_server_name_indication)
         else:
             if self.xmpp_to_hostname:
                 raise InvalidServerNetworkConfigurationError("Can only specify xmpp_to for the XMPP StartTLS protocol.")
+
+        if self.tls_opportunistic_encryption and self.http_user_agent:
+            raise InvalidServerNetworkConfigurationError(
+                "Cannot specify both tls_opportunistic_encryption and http_user_agent"
+            )
 
     @classmethod
     def default_for_server_location(cls, server_location: ServerNetworkLocation) -> "ServerNetworkConfiguration":
