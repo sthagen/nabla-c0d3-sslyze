@@ -315,7 +315,7 @@ class SslConnection:
             )
         except OSError as e:
             # OSError is the parent of all (non-TLS) socket/connection errors so it should be last
-            if "Nassl SSL handshake failed" in e.args[0]:
+            if "Nassl SSL handshake failed" in str(e.args):
                 # Special error returned by nassl
                 raise ServerRejectedTlsHandshake(
                     server_location=self._server_location,
