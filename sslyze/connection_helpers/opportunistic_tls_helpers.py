@@ -142,7 +142,7 @@ class _RdpHelper(_OpportunisticTlsHelper):
 
     ERR_NO_STARTTLS = "RDP AUTH TLS was rejected"
 
-    START_TLS_CMD = b"\x03\x00\x00\x13\x0E\xE0\x00\x00\x00\x00\x00\x01\x00\x08\x00\x03\x00\x00\x00"
+    START_TLS_CMD = b"\x03\x00\x00\x13\x0e\xe0\x00\x00\x00\x00\x00\x01\x00\x08\x00\x03\x00\x00\x00"
     START_TLS_OK = b"Start TLS request accepted."
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
@@ -201,7 +201,7 @@ class _FtpHelper(_GenericOpportunisticTlsHelper):
 class _PostgresHelper(_GenericOpportunisticTlsHelper):
     ERR_NO_STARTTLS = "Postgres AUTH TLS was rejected"
 
-    START_TLS_CMD = b"\x00\x00\x00\x08\x04\xD2\x16\x2F"
+    START_TLS_CMD = b"\x00\x00\x00\x08\x04\xd2\x16\x2f"
     START_TLS_OK = b"S"
     SHOULD_WAIT_FOR_SERVER_BANNER = False
 

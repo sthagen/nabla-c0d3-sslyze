@@ -173,9 +173,9 @@ def _check_tls_curves(
 
     tls_curves_difference = supported_curves - mozilla_config.tls_curves
     if tls_curves_difference:
-        issues_with_tls_curves[
-            "tls_curves"
-        ] = f"TLS curves {tls_curves_difference} are supported, but should be rejected."
+        issues_with_tls_curves["tls_curves"] = (
+            f"TLS curves {tls_curves_difference} are supported, but should be rejected."
+        )
 
     # TODO(AD): Disable the check on the curves; not even Google, Mozilla nor Cloudflare are compliant...
     # return problems_with_tls_curves
@@ -190,9 +190,9 @@ def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str
 
     assert scan_result.openssl_ccs_injection.result
     if scan_result.openssl_ccs_injection.result.is_vulnerable_to_ccs_injection:
-        issues_with_tls_vulns[
-            "tls_vulnerability_ccs_injection"
-        ] = "Server is vulnerable to the OpenSSL CCS injection attack."
+        issues_with_tls_vulns["tls_vulnerability_ccs_injection"] = (
+            "Server is vulnerable to the OpenSSL CCS injection attack."
+        )
 
     assert scan_result.heartbleed.result
     if scan_result.heartbleed.result.is_vulnerable_to_heartbleed:
@@ -204,9 +204,9 @@ def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str
 
     assert scan_result.session_renegotiation.result
     if not scan_result.session_renegotiation.result.supports_secure_renegotiation:
-        issues_with_tls_vulns[
-            "tls_vulnerability_renegotiation"
-        ] = "Server is vulnerable to the insecure renegotiation attack."
+        issues_with_tls_vulns["tls_vulnerability_renegotiation"] = (
+            "Server is vulnerable to the insecure renegotiation attack."
+        )
 
     return issues_with_tls_vulns
 
@@ -252,21 +252,21 @@ def _check_tls_versions_and_ciphers(
     issues_with_tls_ciphers = {}
     tls_versions_difference = tls_versions_supported - mozilla_config.tls_versions
     if tls_versions_difference:
-        issues_with_tls_ciphers[
-            "tls_versions"
-        ] = f"TLS versions {tls_versions_difference} are supported, but should be rejected."
+        issues_with_tls_ciphers["tls_versions"] = (
+            f"TLS versions {tls_versions_difference} are supported, but should be rejected."
+        )
 
     tls_1_3_cipher_suites_difference = tls_1_3_cipher_suites_supported - mozilla_config.ciphersuites
     if tls_1_3_cipher_suites_difference:
-        issues_with_tls_ciphers[
-            "ciphersuites"
-        ] = f"TLS 1.3 cipher suites {tls_1_3_cipher_suites_difference} are supported, but should be rejected."
+        issues_with_tls_ciphers["ciphersuites"] = (
+            f"TLS 1.3 cipher suites {tls_1_3_cipher_suites_difference} are supported, but should be rejected."
+        )
 
     cipher_suites_difference = cipher_suites_supported - mozilla_config.ciphers.iana
     if cipher_suites_difference:
-        issues_with_tls_ciphers[
-            "ciphers"
-        ] = f"Cipher suites {cipher_suites_difference} are supported, but should be rejected."
+        issues_with_tls_ciphers["ciphers"] = (
+            f"Cipher suites {cipher_suites_difference} are supported, but should be rejected."
+        )
 
     if mozilla_config.ecdh_param_size and smallest_ecdh_param_size < mozilla_config.ecdh_param_size:
         issues_with_tls_ciphers["ecdh_param_size"] = (
@@ -294,9 +294,9 @@ def _check_certificates(
         # Validate certificate trust
         leaf_cert = cert_deployment.received_certificate_chain[0]
         if not cert_deployment.verified_certificate_chain:
-            issues_with_certificates[
-                "certificate_path_validation"
-            ] = f"Certificate path validation failed for {leaf_cert.subject.rfc4514_string()}."
+            issues_with_certificates["certificate_path_validation"] = (
+                f"Certificate path validation failed for {leaf_cert.subject.rfc4514_string()}."
+            )
 
         # Validate the public key
         public_key = leaf_cert.public_key()
@@ -313,9 +313,9 @@ def _check_certificates(
         elif isinstance(public_key, RSAPublicKey):
             deployed_key_algorithms.add("rsa")
             if mozilla_config.rsa_key_size and public_key.key_size < mozilla_config.rsa_key_size:
-                issues_with_certificates[
-                    "rsa_key_size"
-                ] = f"RSA key size is {public_key.key_size}, minimum allowed is {mozilla_config.rsa_key_size}."
+                issues_with_certificates["rsa_key_size"] = (
+                    f"RSA key size is {public_key.key_size}, minimum allowed is {mozilla_config.rsa_key_size}."
+                )
 
         else:
             deployed_key_algorithms.add(public_key.__class__.__name__)

@@ -7,6 +7,7 @@ See ./.github/workflows and https://github.com/nabla-c0d3/sslyze/issues/472 for 
 
 $ PYTHONPATH=. python tests/web_servers/scan_localhost.py apache2
 """
+
 import sys
 from datetime import datetime
 from enum import Enum
