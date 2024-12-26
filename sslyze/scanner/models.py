@@ -151,9 +151,14 @@ class AllScanCommandsAttempts:
     http_headers: HttpHeadersScanAttempt
 
 
+_SCAN_CMD_FIELD_NAME_TO_CLS: dict[str, Type[ScanCommandAttempt]] = {
+    cls_field.name: cls_field.type  # type: ignore
+    for cls_field in fields(AllScanCommandsAttempts)
+}
+
+
 def get_scan_command_attempt_cls(scan_command: ScanCommand) -> Type[ScanCommandAttempt]:
-    field_name_to_cls = {cls_field.name: cls_field.type for cls_field in fields(AllScanCommandsAttempts)}
-    return field_name_to_cls[scan_command.value]
+    return _SCAN_CMD_FIELD_NAME_TO_CLS[scan_command.value]
 
 
 class ServerConnectivityStatusEnum(str, Enum):
