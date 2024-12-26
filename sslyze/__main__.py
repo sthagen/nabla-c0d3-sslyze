@@ -1,5 +1,5 @@
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Optional, TextIO
 
 from sslyze.cli.console_output import ObserverToGenerateConsoleOutput
@@ -23,7 +23,7 @@ from sslyze.mozilla_tls_profile.mozilla_config_checker import (
 
 def main() -> None:
     # Parse the supplied command line
-    date_scans_started = datetime.now(UTC)
+    date_scans_started = datetime.now(timezone.utc)
     sslyze_parser = CommandLineParser(__version__)
     try:
         parsed_command_line = sslyze_parser.parse_command_line()
@@ -82,7 +82,7 @@ def main() -> None:
                 for bad_server in parsed_command_line.invalid_servers
             ],
             date_scans_started=date_scans_started,
-            date_scans_completed=datetime.now(UTC),
+            date_scans_completed=datetime.now(timezone.utc),
         )
         json_output_as_str = json_output.model_dump_json(indent=2)
         json_file_out.write(json_output_as_str)
