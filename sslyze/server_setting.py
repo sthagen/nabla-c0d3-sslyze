@@ -173,6 +173,8 @@ class ServerNetworkConfiguration:
         xmpp_to_hostname: The hostname to set within the `to` attribute of the XMPP stream. If not supplied, the
             server's hostname will be used. Should only be set if the supplied `tls_wrapped_protocol` is an
             XMPP protocol.
+        http_user_agent: The User-Agent to send in HTTP requests. If not supplied, a default Chrome-like
+            is used that includes the sslyze version.
         network_timeout: The timeout (in seconds) to be used when attempting to establish a connection to the
             server.
         network_max_retries: The number of retries SSLyze will perform when attempting to establish a connection
@@ -184,6 +186,7 @@ class ServerNetworkConfiguration:
     tls_client_auth_credentials: Optional[ClientAuthenticationCredentials] = None
 
     xmpp_to_hostname: Optional[str] = None
+    http_user_agent: Optional[str] = None
 
     network_timeout: int = 5
     network_max_retries: int = 3
