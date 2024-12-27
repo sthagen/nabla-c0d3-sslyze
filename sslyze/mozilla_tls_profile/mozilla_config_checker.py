@@ -177,9 +177,7 @@ def _check_tls_curves(
             f"TLS curves {tls_curves_difference} are supported, but should be rejected."
         )
 
-    # TODO(AD): Disable the check on the curves; not even Google, Mozilla nor Cloudflare are compliant...
-    # return problems_with_tls_curves
-    return {}
+    return issues_with_tls_curves
 
 
 def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str, str]:
