@@ -22,6 +22,7 @@ from sslyze.server_connectivity import (
 # Classes for setting up scan commands and extra arguments
 from sslyze.plugins.scan_commands import ScanCommand
 from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArgument
+from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationExtraArgument
 
 # Classes for scanning the servers
 from sslyze.scanner.models import (
