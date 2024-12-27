@@ -19,6 +19,7 @@ from sslyze import (
     RobotScanResultEnum,
     SupportedEllipticCurvesScanResult,
 )
+from sslyze.plugins.http_headers_plugin import HttpHeadersScanResult
 
 
 class _MozillaCiphersAsJson(pydantic.BaseModel):
@@ -92,6 +93,7 @@ SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: Set[ScanCommand] = {
     ScanCommand.SESSION_RENEGOTIATION,
     ScanCommand.CERTIFICATE_INFO,
     ScanCommand.ELLIPTIC_CURVES,
+    # ScanCommand.HTTP_HEADERS,  # Disabled for now; see below
 }
 
 
@@ -153,6 +155,14 @@ class MozillaTlsConfigurationChecker:
         # Checks on TLS vulnerabilities
         issues_with_tls_vulns = _check_tls_vulnerabilities(server_scan_result.scan_result)
         all_issues.update(issues_with_tls_vulns)
+
+        # TODO(AD): Re-enable this check. Right now nobody follows the recommendation of the Mozilla profile
+        # to have an HSTS max-age of 63072000 seconds (2 years).
+        # Check the HSTS header
+        # assert server_scan_result.scan_result.http_headers
+        # assert server_scan_result.scan_result.http_headers.result
+        # issue_with_hsts = _check_http_headers(server_scan_result.scan_result.http_headers.result, mozilla_config)
+        # all_issues.update(issue_with_hsts)
 
         if all_issues:
             raise ServerNotCompliantWithMozillaTlsConfiguration(
@@ -301,12 +311,10 @@ def _check_certificates(
         if isinstance(public_key, EllipticCurvePublicKey):
             deployed_key_algorithms.add("ecdsa")
             if public_key.curve.name not in mozilla_config.certificate_curves:
-                # TODO(AD): Disable the check on the curves; not even Google and Cloudflare are compliant...
-                pass
-                # problems_with_certificates["certificate_curves"] = (
-                #     f"Certificate curve is {public_key.curve.name},"
-                #     f" should be one of {expected_mozilla_config.certificate_curves}."
-                # )
+                issues_with_certificates["certificate_curves"] = (
+                    f"Certificate curve is {public_key.curve.name},"
+                    f" should be one of {mozilla_config.certificate_curves}."
+                )
 
         elif isinstance(public_key, RSAPublicKey):
             deployed_key_algorithms.add("rsa")
@@ -359,3 +367,22 @@ def _check_certificates(
     # TODO(AD): Maybe add check for ocsp_staple but that one seems optional in https://ssl-config.mozilla.org/
 
     return issues_with_certificates
+
+
+def _check_http_headers(
+    http_headers_result: HttpHeadersScanResult,
+    mozilla_config: _MozillaTlsConfigurationAsJson,
+) -> Dict[str, str]:
+    issues_with_http_headers = {}
+
+    if not http_headers_result.strict_transport_security_header:
+        issues_with_http_headers["hsts_min_age"] = "HSTS header is missing."
+
+    else:
+        if http_headers_result.strict_transport_security_header.max_age < mozilla_config.hsts_min_age:
+            issues_with_http_headers["hsts_min_age"] = (
+                f"HSTS max-age is {http_headers_result.strict_transport_security_header.max_age},"
+                f" should be superior or equal to {mozilla_config.hsts_min_age}."
+            )
+
+    return issues_with_http_headers
