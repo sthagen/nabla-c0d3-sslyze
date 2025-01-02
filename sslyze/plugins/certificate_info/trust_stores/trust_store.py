@@ -6,9 +6,9 @@ from cryptography.x509 import Certificate
 from cryptography.x509 import ExtensionNotFound, CertificatePolicies
 from cryptography.x509 import ObjectIdentifier
 from cryptography.x509 import ExtensionOID
-from typing import List, cast
+from typing import List, Union, cast
 from typing import Optional
-from cryptography.x509 import load_pem_x509_certificates, DNSName, load_pem_x509_certificate
+from cryptography.x509 import load_pem_x509_certificates, DNSName, IPAddress, load_pem_x509_certificate
 from cryptography.x509.verification import PolicyBuilder, Store, VerificationError
 
 
@@ -73,14 +73,13 @@ class TrustStore:
     def verify_certificate_chain(
         self,
         certificate_chain_as_pem: List[str],
-        server_hostname: str,
+        server_subject: Union[IPAddress, DNSName],
         validation_time: Optional[datetime.datetime] = None,
     ) -> PathValidationResult:
-        final_validation_time = validation_time or datetime.datetime.now()
+        final_validation_time = validation_time or datetime.datetime.now(datetime.timezone.utc)
         builder = PolicyBuilder().store(self._x509_store)
         builder = builder.time(final_validation_time)
-
-        verifier = builder.build_server_verifier(DNSName(server_hostname))
+        verifier = builder.build_server_verifier(server_subject)
 
         leaf_cert = load_pem_x509_certificate(certificate_chain_as_pem[0].encode("ascii"))
         intermediate_certs = [load_pem_x509_certificate(pem.encode("ascii")) for pem in certificate_chain_as_pem[1:]]

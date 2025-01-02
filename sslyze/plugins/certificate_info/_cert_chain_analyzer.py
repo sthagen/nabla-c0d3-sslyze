@@ -1,12 +1,20 @@
 from dataclasses import dataclass
 
-from typing import Optional, List, cast
+from typing import Optional, List, Union, cast
 
 import cryptography
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate, load_pem_x509_certificate, TLSFeature
+from cryptography.x509 import (
+    ExtensionNotFound,
+    ExtensionOID,
+    Certificate,
+    load_pem_x509_certificate,
+    TLSFeature,
+    DNSName,
+    IPAddress,
+)
 from cryptography.x509.ocsp import load_der_ocsp_response, OCSPResponseStatus, OCSPResponse
 import nassl.ocsp_response
 
@@ -106,12 +114,12 @@ class CertificateDeploymentAnalyzer:
 
     def __init__(
         self,
-        server_hostname: str,
+        server_subject: Union[IPAddress, DNSName],
         server_certificate_chain_as_pem: List[str],
         server_ocsp_response: Optional[nassl._nassl.OCSP_RESPONSE],
         trust_stores_for_validation: List[TrustStore],
     ) -> None:
-        self.server_hostname = server_hostname
+        self.server_subject = server_subject
         self.server_certificate_chain_as_pem = server_certificate_chain_as_pem
         self.server_ocsp_response = server_ocsp_response
         self.trust_stores_for_validation = trust_stores_for_validation
@@ -189,7 +197,7 @@ class CertificateDeploymentAnalyzer:
         all_path_validation_results = []
         for trust_store in self.trust_stores_for_validation:
             path_validation_result = trust_store.verify_certificate_chain(
-                self.server_certificate_chain_as_pem, self.server_hostname
+                self.server_certificate_chain_as_pem, self.server_subject
             )
             all_path_validation_results.append(path_validation_result)
 

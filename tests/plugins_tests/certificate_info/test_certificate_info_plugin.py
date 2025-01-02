@@ -156,7 +156,6 @@ class TestCertificateInfoPlugin:
 
         # When running the scan, it succeeds
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
-
         assert plugin_result.certificate_deployments[0].received_certificate_chain
 
     def test_certificate_with_no_subject(self):
@@ -190,6 +189,16 @@ class TestCertificateInfoPlugin:
 
         # And multiple certificates were detected
         assert len(plugin_result.certificate_deployments) > 1
+
+    def test_ipv6_server_string(self):
+        # Given a server to scan for which SSLyze only received an IPv6 address
+        # Test for https://github.com/nabla-c0d3/sslyze/issues/675
+        server_location = ServerNetworkLocation("2a00:1450:4007:80d::200e", 443, ip_address="2a00:1450:4007:80d::200e")
+        server_info = check_connectivity_to_server_and_return_info(server_location)
+
+        # When running the scan, it succeeds
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
+        assert plugin_result.certificate_deployments[0].received_certificate_chain
 
     @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed(self):

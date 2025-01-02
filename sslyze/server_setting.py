@@ -71,11 +71,11 @@ class ServerNetworkLocation:
             server's IP address and connecting to it.
     """
 
-    hostname: str
+    hostname: str  # TODO(AD): Should be None when no hostname is supplied (ie. only an IP address)
     port: int = 443
 
     # Set if SSLyze is directly connecting to the server ie. connection_type == DIRECT
-    ip_address: Optional[str] = None
+    ip_address: Optional[str] = None  # TODO(AD): Should be an IPv4Address or IPv6Address
 
     # Set if SSLyze is connecting via a proxy ie. connection_type == VIA_HTTP_PROXY
     http_proxy_settings: Optional[HttpProxySettings] = None
