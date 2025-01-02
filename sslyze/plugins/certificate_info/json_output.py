@@ -230,10 +230,10 @@ class _OcspResponseAsJson(BaseModelWithOrmMode):
         return dict(
             response_status=ocsp_response.response_status,
             certificate_status=ocsp_response.certificate_status,
-            revocation_time=ocsp_response.revocation_time,
-            produced_at=ocsp_response.produced_at,
-            this_update=ocsp_response.this_update,
-            next_update=ocsp_response.next_update,
+            revocation_time=ocsp_response.revocation_time_utc,
+            produced_at=ocsp_response.produced_at_utc,
+            this_update=ocsp_response.this_update_utc,
+            next_update=ocsp_response.next_update_utc,
             serial_number=ocsp_response.serial_number,
         )
 
