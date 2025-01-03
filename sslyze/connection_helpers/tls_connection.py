@@ -127,6 +127,7 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     # enabled in the client; for example client only supports EC cipher suites but server returned an RSA certificate
     "wrong certificate type": "Server returned wrong certificate type",
     "invalid encoding": "TLS error: Invalid encoding",
+    "certificate unknown": "TLS alert: certificate unknown"
 }
 
 
