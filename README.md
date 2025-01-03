@@ -39,7 +39,7 @@ $ python -m sslyze www.yahoo.com www.google.com "[2607:f8b0:400a:807::2004]:443"
 It can also be used via Docker:
 
 ```
-$ docker run --rm -it nablac0d3/sslyze:6.0.0 www.google.com
+$ docker run --rm -it nablac0d3/sslyze:6.1.0 www.google.com
 ```
 
 Lastly, a pre-compiled Windows executable can be downloaded from [the Releases
@@ -104,7 +104,7 @@ $ invoke test
 License
 -------
 
-Copyright (c) 2024 Alban Diquet
+Copyright (c) 2025 Alban Diquet
 
 SSLyze is made available under the terms of the GNU Affero General Public License (AGPL). See LICENSE.txt for details and exceptions.
 
