@@ -55,7 +55,7 @@
           "$ref": "#/$defs/HttpHeadersScanAttemptAsJson"
         },
         "tls_extended_master_secret": {
-          "$ref": "#/$defs/EmsExtensionScanResultAsJson"
+          "$ref": "#/$defs/EmsExtensionScanAttemptAsJson"
         }
       },
       "required": [
@@ -370,6 +370,53 @@
         "supports_early_data"
       ],
       "title": "EarlyDataScanResultAsJson",
+      "type": "object"
+    },
+    "EmsExtensionScanAttemptAsJson": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScanCommandErrorReasonEnum"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error_trace": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Error Trace"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EmsExtensionScanResultAsJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "error_reason",
+        "error_trace",
+        "result"
+      ],
+      "title": "EmsExtensionScanAttemptAsJson",
       "type": "object"
     },
     "EmsExtensionScanResultAsJson": {
