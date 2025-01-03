@@ -216,6 +216,9 @@ class _OcspResponseAsJson(BaseModelWithOrmMode):
     @model_validator(mode="before")
     @classmethod
     def _handle_object(cls, ocsp_response: ocsp.OCSPResponse) -> Any:
+        if not isinstance(ocsp_response, ocsp.OCSPResponse):
+            return ocsp_response
+
         response_status = ocsp_response.response_status.name
         if ocsp_response.response_status != ocsp.OCSPResponseStatus.SUCCESSFUL:
             return dict(
@@ -228,7 +231,7 @@ class _OcspResponseAsJson(BaseModelWithOrmMode):
                 serial_number=None,
             )
         return dict(
-            response_status=ocsp_response.response_status,
+            response_status=response_status,
             certificate_status=ocsp_response.certificate_status,
             revocation_time=ocsp_response.revocation_time_utc,
             produced_at=ocsp_response.produced_at_utc,
