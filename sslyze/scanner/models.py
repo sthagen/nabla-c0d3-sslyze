@@ -11,6 +11,7 @@ from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesScanRes
 from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult, CertificateInfoExtraArgument
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.early_data_plugin import EarlyDataScanResult
+from sslyze.plugins.ems_extension_plugin import EmsExtensionScanResult
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvScanResult
 from sslyze.plugins.heartbleed_plugin import HeartbleedScanResult
 from sslyze.plugins.http_headers_plugin import HttpHeadersScanResult
@@ -132,6 +133,10 @@ class SupportedEllipticCurvesScanAttempt(ScanCommandAttempt[SupportedEllipticCur
     pass
 
 
+class EmsExtensionScanAttempt(ScanCommandAttempt[EmsExtensionScanResult]):
+    pass
+
+
 @dataclass(frozen=True)
 class AllScanCommandsAttempts:
     """The result of every scan command supported by SSLyze."""
@@ -153,6 +158,7 @@ class AllScanCommandsAttempts:
     session_resumption: SessionResumptionSupportScanAttempt
     elliptic_curves: SupportedEllipticCurvesScanAttempt
     http_headers: HttpHeadersScanAttempt
+    tls_extended_master_secret: EmsExtensionScanAttempt
 
 
 _SCAN_CMD_FIELD_NAME_TO_CLS: dict[str, Type[ScanCommandAttempt]] = {

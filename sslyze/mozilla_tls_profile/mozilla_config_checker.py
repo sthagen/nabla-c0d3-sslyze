@@ -89,10 +89,12 @@ SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: Set[ScanCommand] = {
     ScanCommand.HEARTBLEED,
     ScanCommand.ROBOT,
     ScanCommand.OPENSSL_CCS_INJECTION,
+    ScanCommand.TLS_FALLBACK_SCSV,
     ScanCommand.TLS_COMPRESSION,
     ScanCommand.SESSION_RENEGOTIATION,
     ScanCommand.CERTIFICATE_INFO,
     ScanCommand.ELLIPTIC_CURVES,
+    ScanCommand.TLS_EXTENDED_MASTER_SECRET,
     # ScanCommand.HTTP_HEADERS,  # Disabled for now; see below
 }
 
@@ -183,9 +185,9 @@ def _check_tls_curves(
 
     tls_curves_difference = supported_curves - mozilla_config.tls_curves
     if tls_curves_difference:
-        issues_with_tls_curves[
-            "tls_curves"
-        ] = f"TLS curves {tls_curves_difference} are supported, but should be rejected."
+        issues_with_tls_curves["tls_curves"] = (
+            f"TLS curves {tls_curves_difference} are supported, but should be rejected."
+        )
 
     return issues_with_tls_curves
 
@@ -198,9 +200,15 @@ def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str
 
     assert scan_result.openssl_ccs_injection.result
     if scan_result.openssl_ccs_injection.result.is_vulnerable_to_ccs_injection:
-        issues_with_tls_vulns[
-            "tls_vulnerability_ccs_injection"
-        ] = "Server is vulnerable to the OpenSSL CCS injection attack."
+        issues_with_tls_vulns["tls_vulnerability_ccs_injection"] = (
+            "Server is vulnerable to the OpenSSL CCS injection attack."
+        )
+
+    assert scan_result.tls_fallback_scsv.result
+    if not scan_result.tls_fallback_scsv.result.supports_fallback_scsv:
+        issues_with_tls_vulns["tls_vulnerability_fallback_scsv"] = (
+            "Server is vulnerable to TLS downgrade attacks because it does not support the TLS_FALLBACK_SCSV mechanism."
+        )
 
     assert scan_result.heartbleed.result
     if scan_result.heartbleed.result.is_vulnerable_to_heartbleed:
@@ -212,9 +220,15 @@ def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str
 
     assert scan_result.session_renegotiation.result
     if not scan_result.session_renegotiation.result.supports_secure_renegotiation:
-        issues_with_tls_vulns[
-            "tls_vulnerability_renegotiation"
-        ] = "Server is vulnerable to the insecure renegotiation attack."
+        issues_with_tls_vulns["tls_vulnerability_renegotiation"] = (
+            "Server is vulnerable to the insecure renegotiation attack."
+        )
+
+    assert scan_result.tls_extended_master_secret.result
+    if not scan_result.tls_extended_master_secret.result.supports_ems_extension:
+        issues_with_tls_vulns["tls_vulnerability_extended_master_secret"] = (
+            "Server does not support the Extended Master Secret TLS extension."
+        )
 
     return issues_with_tls_vulns
 
@@ -260,21 +274,21 @@ def _check_tls_versions_and_ciphers(
     issues_with_tls_ciphers = {}
     tls_versions_difference = tls_versions_supported - mozilla_config.tls_versions
     if tls_versions_difference:
-        issues_with_tls_ciphers[
-            "tls_versions"
-        ] = f"TLS versions {tls_versions_difference} are supported, but should be rejected."
+        issues_with_tls_ciphers["tls_versions"] = (
+            f"TLS versions {tls_versions_difference} are supported, but should be rejected."
+        )
 
     tls_1_3_cipher_suites_difference = tls_1_3_cipher_suites_supported - mozilla_config.ciphersuites
     if tls_1_3_cipher_suites_difference:
-        issues_with_tls_ciphers[
-            "ciphersuites"
-        ] = f"TLS 1.3 cipher suites {tls_1_3_cipher_suites_difference} are supported, but should be rejected."
+        issues_with_tls_ciphers["ciphersuites"] = (
+            f"TLS 1.3 cipher suites {tls_1_3_cipher_suites_difference} are supported, but should be rejected."
+        )
 
     cipher_suites_difference = cipher_suites_supported - mozilla_config.ciphers.iana
     if cipher_suites_difference:
-        issues_with_tls_ciphers[
-            "ciphers"
-        ] = f"Cipher suites {cipher_suites_difference} are supported, but should be rejected."
+        issues_with_tls_ciphers["ciphers"] = (
+            f"Cipher suites {cipher_suites_difference} are supported, but should be rejected."
+        )
 
     if mozilla_config.ecdh_param_size and smallest_ecdh_param_size < mozilla_config.ecdh_param_size:
         issues_with_tls_ciphers["ecdh_param_size"] = (
@@ -302,9 +316,9 @@ def _check_certificates(
         # Validate certificate trust
         leaf_cert = cert_deployment.received_certificate_chain[0]
         if not cert_deployment.verified_certificate_chain:
-            issues_with_certificates[
-                "certificate_path_validation"
-            ] = f"Certificate path validation failed for {leaf_cert.subject.rfc4514_string()}."
+            issues_with_certificates["certificate_path_validation"] = (
+                f"Certificate path validation failed for {leaf_cert.subject.rfc4514_string()}."
+            )
 
         # Validate the public key
         public_key = leaf_cert.public_key()
@@ -319,9 +333,9 @@ def _check_certificates(
         elif isinstance(public_key, RSAPublicKey):
             deployed_key_algorithms.add("rsa")
             if mozilla_config.rsa_key_size and public_key.key_size < mozilla_config.rsa_key_size:
-                issues_with_certificates[
-                    "rsa_key_size"
-                ] = f"RSA key size is {public_key.key_size}, minimum allowed is {mozilla_config.rsa_key_size}."
+                issues_with_certificates["rsa_key_size"] = (
+                    f"RSA key size is {public_key.key_size}, minimum allowed is {mozilla_config.rsa_key_size}."
+                )
 
         else:
             deployed_key_algorithms.add(public_key.__class__.__name__)
