@@ -7,6 +7,7 @@ from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesImpleme
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
 from sslyze.plugins.compression_plugin import CompressionImplementation
 from sslyze.plugins.early_data_plugin import EarlyDataImplementation
+from sslyze.plugins.ems_extension_plugin import EmsExtensionImplementation
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvImplementation
 from sslyze.plugins.heartbleed_plugin import HeartbleedImplementation
 from sslyze.plugins.http_headers_plugin import HttpHeadersImplementation
@@ -45,6 +46,7 @@ class ScanCommand(str, Enum):
     SESSION_RENEGOTIATION = "session_renegotiation"
     HTTP_HEADERS = "http_headers"
     ELLIPTIC_CURVES = "elliptic_curves"
+    TLS_EXTENDED_MASTER_SECRET = "tls_extended_master_secret"
 
 
 class ScanCommandsRepository:
@@ -75,4 +77,5 @@ _IMPLEMENTATION_CLASSES: Dict[ScanCommand, Type["ScanCommandImplementation"]] = 
     ScanCommand.SESSION_RENEGOTIATION: SessionRenegotiationImplementation,
     ScanCommand.HTTP_HEADERS: HttpHeadersImplementation,
     ScanCommand.ELLIPTIC_CURVES: SupportedEllipticCurvesImplementation,
+    ScanCommand.TLS_EXTENDED_MASTER_SECRET: EmsExtensionImplementation,
 }
