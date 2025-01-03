@@ -9,7 +9,7 @@ from pydantic import BaseModel, model_validator
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.x509 import NameAttribute, ObjectIdentifier, Name, Certificate
+from cryptography.x509 import NameAttribute, ObjectIdentifier, Name, Certificate, ocsp
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 
 from sslyze import (
@@ -212,6 +212,33 @@ class _OcspResponseAsJson(BaseModelWithOrmMode):
     next_update: Optional[datetime]
 
     serial_number: Optional[int]
+
+    @model_validator(mode="before")
+    @classmethod
+    def _handle_object(cls, ocsp_response: ocsp.OCSPResponse) -> Any:
+        if not isinstance(ocsp_response, ocsp.OCSPResponse):
+            return ocsp_response
+
+        response_status = ocsp_response.response_status.name
+        if ocsp_response.response_status != ocsp.OCSPResponseStatus.SUCCESSFUL:
+            return dict(
+                response_status=response_status,
+                certificate_status=None,
+                revocation_time=None,
+                produced_at=None,
+                this_update=None,
+                next_update=None,
+                serial_number=None,
+            )
+        return dict(
+            response_status=response_status,
+            certificate_status=ocsp_response.certificate_status,
+            revocation_time=ocsp_response.revocation_time_utc,
+            produced_at=ocsp_response.produced_at_utc,
+            this_update=ocsp_response.this_update_utc,
+            next_update=ocsp_response.next_update_utc,
+            serial_number=ocsp_response.serial_number,
+        )
 
 
 class _TrustStoreAsJson(BaseModelWithOrmMode):

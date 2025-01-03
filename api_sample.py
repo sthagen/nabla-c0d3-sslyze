@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 
@@ -25,7 +25,7 @@ def _print_failed_scan_command_attempt(scan_command_attempt: ScanCommandAttempt)
 
 def main() -> None:
     print("=> Starting the scans")
-    date_scans_started = datetime.utcnow()
+    date_scans_started = datetime.now(timezone.utc)
 
     # First create the scan requests for each server that we want to scan
     try:
@@ -104,7 +104,7 @@ def main() -> None:
     # Lastly, save the all the results to a JSON file
     json_file_out = Path("api_sample_results.json")
     print(f"\n\n=> Saving scan results to {json_file_out}")
-    example_json_result_output(json_file_out, all_server_scan_results, date_scans_started, datetime.utcnow())
+    example_json_result_output(json_file_out, all_server_scan_results, date_scans_started, datetime.now(timezone.utc))
 
     # And ensure we are able to parse them
     print(f"\n\n=> Parsing scan results from {json_file_out}")

@@ -149,7 +149,6 @@ Result class
 
 .. autoclass:: HttpHeadersScanResult
 .. autoclass:: StrictTransportSecurityHeader
-.. autoclass:: ExpectCtHeader
 
 OpenSSL CCS Injection
 *********************
@@ -170,3 +169,14 @@ Result class
 ============
 
 .. autoclass:: SessionRenegotiationScanResult
+
+
+Extended Master Secret
+**********************
+
+**ScanCommand.TLS_EXTENDED_MASTER_SECRET**: Test a server for TLS Extended Master Secret extension support.
+
+Result class
+============
+
+.. autoclass:: EmsExtensionScanResult

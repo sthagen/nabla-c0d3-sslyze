@@ -14,11 +14,23 @@ from sslyze.plugins.plugin_base import (
     ScanCommandExtraArgument,
     ScanJob,
     ScanCommandResult,
-    ScanCommandWrongUsageError,
     ScanCommandCliConnector,
     ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
+
+
+@dataclass(frozen=True)
+class SessionRenegotiationExtraArgument(ScanCommandExtraArgument):
+    """Additional configuration for testing a server for client-initiated renegotiation.
+
+    Attributes:
+        client_renegotiation_attempts: The number of attempts to make when testing the client initiated
+            renegotiation DoS vector. If the server accepts this many attempts,
+            is_vulnerable_to_client_renegotiation_dos is set. Default: 10.
+    """
+
+    client_renegotiation_attempts: int
 
 
 @dataclass(frozen=True)
@@ -28,15 +40,18 @@ class SessionRenegotiationScanResult(ScanCommandResult):
     Attributes:
         accepts_client_renegotiation: True if the server honors client-initiated renegotiation attempts.
         supports_secure_renegotiation: True if the server supports secure renegotiation.
+        client_renegotiations_success_count: the number of successful client-initiated renegotiation attempts.
     """
 
     supports_secure_renegotiation: bool
     is_vulnerable_to_client_renegotiation_dos: bool
+    client_renegotiations_success_count: int
 
 
 class SessionRenegotiationScanResultAsJson(BaseModelWithOrmModeAndForbid):
     supports_secure_renegotiation: bool
     is_vulnerable_to_client_renegotiation_dos: bool
+    client_renegotiations_success_count: int
 
 
 class SessionRenegotiationScanAttemptAsJson(ScanCommandAttemptAsJson):
@@ -44,7 +59,7 @@ class SessionRenegotiationScanAttemptAsJson(ScanCommandAttemptAsJson):
 
 
 class _ScanJobResultEnum(Enum):
-    IS_VULNERABLE_TO_CLIENT_RENEG_DOS = 1
+    CLIENT_RENEG_RESULT = 1
     SUPPORTS_SECURE_RENEG = 2
 
 
@@ -75,21 +90,25 @@ class _SessionRenegotiationCliConnector(ScanCommandCliConnector[SessionRenegotia
         return result_txt
 
 
-class SessionRenegotiationImplementation(ScanCommandImplementation[SessionRenegotiationScanResult, None]):
+class SessionRenegotiationImplementation(
+    ScanCommandImplementation[SessionRenegotiationScanResult, SessionRenegotiationExtraArgument]
+):
     """Test a server for insecure TLS renegotiation and client-initiated renegotiation."""
 
     cli_connector_cls = _SessionRenegotiationCliConnector
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[SessionRenegotiationExtraArgument] = None
     ) -> List[ScanJob]:
-        if extra_arguments:
-            raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
+        client_renegotiation_attempts = extra_arguments.client_renegotiation_attempts if extra_arguments else 10
 
         return [
             ScanJob(function_to_call=_test_secure_renegotiation, function_arguments=[server_info]),
-            ScanJob(function_to_call=_test_client_renegotiation, function_arguments=[server_info]),
+            ScanJob(
+                function_to_call=_test_client_renegotiation,
+                function_arguments=[server_info, client_renegotiation_attempts],
+            ),
         ]
 
     @classmethod
@@ -104,11 +123,13 @@ class SessionRenegotiationImplementation(ScanCommandImplementation[SessionRenego
             result_enum, value = job.get_result()
             results_dict[result_enum] = value
 
+        is_vulnerable_to_client_renegotiation_dos, client_renegotiations_success_count = results_dict[
+            _ScanJobResultEnum.CLIENT_RENEG_RESULT
+        ]
         return SessionRenegotiationScanResult(
-            is_vulnerable_to_client_renegotiation_dos=results_dict[
-                _ScanJobResultEnum.IS_VULNERABLE_TO_CLIENT_RENEG_DOS
-            ],
+            is_vulnerable_to_client_renegotiation_dos=is_vulnerable_to_client_renegotiation_dos,
             supports_secure_renegotiation=results_dict[_ScanJobResultEnum.SUPPORTS_SECURE_RENEG],
+            client_renegotiations_success_count=client_renegotiations_success_count,
         )
 
 
@@ -147,9 +168,12 @@ def _test_secure_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_Sc
     return _ScanJobResultEnum.SUPPORTS_SECURE_RENEG, supports_secure_renegotiation
 
 
-def _test_client_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_ScanJobResultEnum, bool]:
+def _test_client_renegotiation(
+    server_info: ServerConnectivityInfo, client_renegotiation_attempts: int
+) -> Tuple[_ScanJobResultEnum, Tuple[bool, int]]:
     """Check whether the server honors session renegotiation requests."""
     # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no reneg with TLS 1.3
+    client_renegotiations_success_count = 0
     if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
         tls_version_to_use = TlsVersionEnum.TLS_1_2
         downgraded_from_tls_1_3 = True
@@ -180,8 +204,9 @@ def _test_client_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_Sc
         try:
             # Do a reneg multiple times in a row to be 100% sure that the server has no mitigations in place
             # https://github.com/nabla-c0d3/sslyze/issues/473
-            for i in range(10):
+            for i in range(client_renegotiation_attempts):
                 ssl_connection.ssl_client.do_renegotiate()
+                client_renegotiations_success_count += 1
             accepts_client_renegotiation = True
 
         # Errors caused by a server rejecting the renegotiation
@@ -230,4 +255,4 @@ def _test_client_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_Sc
     finally:
         ssl_connection.close()
 
-    return _ScanJobResultEnum.IS_VULNERABLE_TO_CLIENT_RENEG_DOS, accepts_client_renegotiation
+    return _ScanJobResultEnum.CLIENT_RENEG_RESULT, (accepts_client_renegotiation, client_renegotiations_success_count)

@@ -200,7 +200,9 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
             # Send an HTTP GET request to the server
             ssl_connection.ssl_client.write(
                 HttpRequestGenerator.get_request(
-                    host=server_info.network_configuration.tls_server_name_indication, path=next_location_path
+                    host=server_info.network_configuration.tls_server_name_indication,
+                    path=next_location_path,
+                    user_agent=server_info.network_configuration.http_user_agent,
                 )
             )
             http_response = HttpResponseParser.parse_from_ssl_connection(ssl_connection.ssl_client)
@@ -225,7 +227,9 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
 
     # Prepare the results
     initial_http_request = HttpRequestGenerator.get_request(
-        host=server_info.network_configuration.tls_server_name_indication, path="/"
+        host=server_info.network_configuration.tls_server_name_indication,
+        path="/",
+        user_agent=server_info.network_configuration.http_user_agent,
     ).decode("ascii")
 
     if http_error_trace:

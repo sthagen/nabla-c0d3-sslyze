@@ -11,6 +11,7 @@ from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesScanRes
 from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult, CertificateInfoExtraArgument
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.early_data_plugin import EarlyDataScanResult
+from sslyze.plugins.ems_extension_plugin import EmsExtensionScanResult
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvScanResult
 from sslyze.plugins.heartbleed_plugin import HeartbleedScanResult
 from sslyze.plugins.http_headers_plugin import HttpHeadersScanResult
@@ -18,7 +19,10 @@ from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionScanR
 from sslyze.plugins.openssl_cipher_suites.implementation import CipherSuitesScanResult
 from sslyze.plugins.robot.implementation import RobotScanResult
 from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
-from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanResult
+from sslyze.plugins.session_renegotiation_plugin import (
+    SessionRenegotiationScanResult,
+    SessionRenegotiationExtraArgument,
+)
 from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportScanResult,
     SessionResumptionSupportExtraArgument,
@@ -33,6 +37,7 @@ class ScanCommandsExtraArguments:
     # Field is present if extra arguments were provided for the corresponding scan command
     certificate_info: Optional[CertificateInfoExtraArgument] = None
     session_resumption: Optional[SessionResumptionSupportExtraArgument] = None
+    session_renegotiation: Optional[SessionRenegotiationExtraArgument] = None
 
 
 @dataclass(frozen=True)
@@ -128,6 +133,10 @@ class SupportedEllipticCurvesScanAttempt(ScanCommandAttempt[SupportedEllipticCur
     pass
 
 
+class EmsExtensionScanAttempt(ScanCommandAttempt[EmsExtensionScanResult]):
+    pass
+
+
 @dataclass(frozen=True)
 class AllScanCommandsAttempts:
     """The result of every scan command supported by SSLyze."""
@@ -149,11 +158,17 @@ class AllScanCommandsAttempts:
     session_resumption: SessionResumptionSupportScanAttempt
     elliptic_curves: SupportedEllipticCurvesScanAttempt
     http_headers: HttpHeadersScanAttempt
+    tls_extended_master_secret: EmsExtensionScanAttempt
+
+
+_SCAN_CMD_FIELD_NAME_TO_CLS: dict[str, Type[ScanCommandAttempt]] = {
+    cls_field.name: cls_field.type  # type: ignore
+    for cls_field in fields(AllScanCommandsAttempts)
+}
 
 
 def get_scan_command_attempt_cls(scan_command: ScanCommand) -> Type[ScanCommandAttempt]:
-    field_name_to_cls = {cls_field.name: cls_field.type for cls_field in fields(AllScanCommandsAttempts)}
-    return field_name_to_cls[scan_command.value]
+    return _SCAN_CMD_FIELD_NAME_TO_CLS[scan_command.value]
 
 
 class ServerConnectivityStatusEnum(str, Enum):

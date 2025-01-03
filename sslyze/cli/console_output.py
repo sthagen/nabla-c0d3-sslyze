@@ -1,5 +1,5 @@
 from dataclasses import fields
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TextIO, Optional
 
@@ -23,7 +23,7 @@ from sslyze.server_setting import (
 class ObserverToGenerateConsoleOutput(ScannerObserver):
     def __init__(self, file_to: TextIO, json_path_out: Optional[Path] = None) -> None:
         self._file_to = file_to
-        self._date_scans_started = datetime.utcnow()
+        self._date_scans_started = datetime.now(timezone.utc)
 
         # Used to print the path where the JSON output was written
         self._json_path_out = json_path_out
@@ -101,7 +101,7 @@ class ObserverToGenerateConsoleOutput(ScannerObserver):
         self._file_to.write("\n\n" + self._format_title(scan_txt) + scan_command_results_str)
 
     def all_server_scans_completed(self) -> None:
-        scans_duration = datetime.utcnow() - self._date_scans_started
+        scans_duration = datetime.now(timezone.utc) - self._date_scans_started
         self._file_to.write("\n")
         self._file_to.write(
             self._format_title(f"Scans Completed in {scans_duration.seconds}.{scans_duration.microseconds} s")

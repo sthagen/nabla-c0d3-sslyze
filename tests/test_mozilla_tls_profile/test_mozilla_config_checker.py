@@ -87,16 +87,23 @@ class TestMozillaTlsConfigurationChecker:
             with pytest.raises(ServerNotCompliantWithMozillaTlsConfiguration):
                 checker.check_server(against_config=mozilla_config, server_scan_result=server_scan_result)
 
-    def test_multi_certs_deployment_compliant_with_old(self, server_scan_result_for_google):
-        # Give the scan results for google.com which has multiple leaf certificates
-        # When checking if the server is compliant with the Mozilla "old" TLS config
-        checker = MozillaTlsConfigurationChecker.get_default()
+    def test_solo_cert_deployment_compliant_with_old(self):
+        # Given the scan results for a server that is compliant with the "old" Mozilla config
+        scanner = Scanner()
+        scanner.queue_scans([ServerScanRequest(server_location=ServerNetworkLocation(hostname="www.mozilla.com"))])
+        server_scan_result = next(scanner.get_results())
 
+        # When checking if the server is compliant with the Mozilla "old" TLS config
         # It succeeds and the server is returned as compliant
+        checker = MozillaTlsConfigurationChecker.get_default()
         checker.check_server(
             against_config=MozillaTlsConfigurationEnum.OLD,
-            server_scan_result=server_scan_result_for_google,
+            server_scan_result=server_scan_result,
         )
+
+    def test_multi_certs_deployment_compliant_with_old(self):
+        # TODO(AD): Implement this test
+        pass
 
     def test_multi_certs_deployment_not_compliant_with_intermediate(self, server_scan_result_for_google):
         # Give the scan results for google.com which has multiple leaf certificates

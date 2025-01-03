@@ -7,8 +7,9 @@ See ./.github/workflows and https://github.com/nabla-c0d3/sslyze/issues/472 for 
 
 $ PYTHONPATH=. python tests/web_servers/scan_localhost.py apache2
 """
+
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from sslyze import (
@@ -35,7 +36,7 @@ class WebServerSoftwareEnum(str, Enum):
 def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
     # Queue all scan commands against a server running on localhost
     print("Starting scan.")
-    date_scans_started = datetime.utcnow()
+    date_scans_started = datetime.now(timezone.utc)
     scanner = Scanner()
     scanner.queue_scans([ServerScanRequest(server_location=ServerNetworkLocation("localhost", 443))])
 
@@ -176,7 +177,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
         final_json_output = SslyzeOutputAsJson(
             server_scan_results=[ServerScanResultAsJson.model_validate(server_scan_result)],
             date_scans_started=date_scans_started,
-            date_scans_completed=datetime.utcnow(),
+            date_scans_completed=datetime.now(timezone.utc),
             invalid_server_strings=[],
         )
         final_json_output.model_dump_json()
