@@ -16,7 +16,7 @@ from sslyze.errors import (
 from tests.markers import can_only_run_on_linux_64
 
 
-def _is_ipv6_available() -> bool:
+def is_ipv6_available() -> bool:
     has_ipv6 = False
     s = socket.socket(socket.AF_INET6)
     try:
@@ -103,7 +103,7 @@ class TestServerConnectivityTester:
         # And it detected that only TLS 1.0 is supported
         assert tls_probing_result.highest_tls_version_supported == TlsVersionEnum.TLS_1_0
 
-    @pytest.mark.skipif(not _is_ipv6_available(), reason="IPv6 not available")
+    @pytest.mark.skipif(not is_ipv6_available(), reason="IPv6 not available")
     def test_ipv6(self):
         # Given a server accessible via IPv6
         server_location = ServerNetworkLocation(
