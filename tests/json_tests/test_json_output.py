@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from sslyze.json.json_output import SslyzeOutputAsJson, ServerScanResultAsJson
@@ -21,8 +21,8 @@ class TestSslyzeOutputAsJson:
         json_output = SslyzeOutputAsJson(
             server_scan_results=[ServerScanResultAsJson.model_validate(result) for result in all_server_scan_results],
             invalid_server_strings=[],
-            date_scans_started=datetime.utcnow(),
-            date_scans_completed=datetime.utcnow(),
+            date_scans_started=datetime.now(timezone.utc),
+            date_scans_completed=datetime.now(timezone.utc),
         )
         json_output_as_str = json_output.model_dump_json()
         assert json_output_as_str
@@ -38,8 +38,8 @@ class TestSslyzeOutputAsJson:
         json_output = SslyzeOutputAsJson(
             server_scan_results=[ServerScanResultAsJson.model_validate(server_scan_result)],
             invalid_server_strings=[],
-            date_scans_started=datetime.utcnow(),
-            date_scans_completed=datetime.utcnow(),
+            date_scans_started=datetime.now(timezone.utc),
+            date_scans_completed=datetime.now(timezone.utc),
         )
         json_output_as_str = json_output.model_dump_json()
         assert json_output_as_str
@@ -63,8 +63,8 @@ class TestSslyzeOutputAsJson:
         json_output = SslyzeOutputAsJson(
             server_scan_results=[ServerScanResultAsJson.model_validate(server_scan_result)],
             invalid_server_strings=[],
-            date_scans_started=datetime.utcnow(),
-            date_scans_completed=datetime.utcnow(),
+            date_scans_started=datetime.now(timezone.utc),
+            date_scans_completed=datetime.now(timezone.utc),
         )
         json_output_as_str = json_output.model_dump_json()
         assert json_output_as_str
@@ -91,8 +91,8 @@ class TestSslyzeOutputAsJson:
         json_output = SslyzeOutputAsJson(
             server_scan_results=[ServerScanResultAsJson.model_validate(server_scan_result)],
             invalid_server_strings=[],
-            date_scans_started=datetime.utcnow(),
-            date_scans_completed=datetime.utcnow(),
+            date_scans_started=datetime.now(timezone.utc),
+            date_scans_completed=datetime.now(timezone.utc),
         )
         json_output_as_str = json_output.model_dump_json()
         assert json_output_as_str
