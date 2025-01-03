@@ -53,6 +53,9 @@
         },
         "http_headers": {
           "$ref": "#/$defs/HttpHeadersScanAttemptAsJson"
+        },
+        "tls_extended_master_secret": {
+          "$ref": "#/$defs/EmsExtensionScanResultAsJson"
         }
       },
       "required": [
@@ -72,7 +75,8 @@
         "session_renegotiation",
         "session_resumption",
         "elliptic_curves",
-        "http_headers"
+        "http_headers",
+        "tls_extended_master_secret"
       ],
       "title": "AllScanCommandsAttemptsAsJson",
       "type": "object"
@@ -366,6 +370,20 @@
         "supports_early_data"
       ],
       "title": "EarlyDataScanResultAsJson",
+      "type": "object"
+    },
+    "EmsExtensionScanResultAsJson": {
+      "additionalProperties": false,
+      "properties": {
+        "supports_ems_extension": {
+          "title": "Supports Ems Extension",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "supports_ems_extension"
+      ],
+      "title": "EmsExtensionScanResultAsJson",
       "type": "object"
     },
     "FallbackScsvScanAttemptAsJson": {
@@ -913,11 +931,16 @@
         "is_vulnerable_to_client_renegotiation_dos": {
           "title": "Is Vulnerable To Client Renegotiation Dos",
           "type": "boolean"
+        },
+        "client_renegotiations_success_count": {
+          "title": "Client Renegotiations Success Count",
+          "type": "integer"
         }
       },
       "required": [
         "supports_secure_renegotiation",
-        "is_vulnerable_to_client_renegotiation_dos"
+        "is_vulnerable_to_client_renegotiation_dos",
+        "client_renegotiations_success_count"
       ],
       "title": "SessionRenegotiationScanResultAsJson",
       "type": "object"
@@ -1850,7 +1873,7 @@
     },
     "_ServerNetworkConfigurationAsJson": {
       "additionalProperties": false,
-      "description": "Additional network settings to provide fine-grained control on how to connect to a specific server.\n\nAttributes:\n    tls_server_name_indication: The hostname to set within the Server Name Indication TLS extension.\n    tls_wrapped_protocol: The protocol wrapped in TLS that the server expects. It allows SSLyze to figure out\n        how to establish a (Start)TLS connection to the server and what kind of \"hello\" message\n        (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If not supplied, standard\n        TLS will be used.\n    tls_client_auth_credentials: The client certificate and private key needed to perform mutual authentication\n        with the server. If not supplied, SSLyze will attempt to connect to the server without performing\n        client authentication.\n    xmpp_to_hostname: The hostname to set within the `to` attribute of the XMPP stream. If not supplied, the\n        server's hostname will be used. Should only be set if the supplied `tls_wrapped_protocol` is an\n        XMPP protocol.\n    network_timeout: The timeout (in seconds) to be used when attempting to establish a connection to the\n        server.\n    network_max_retries: The number of retries SSLyze will perform when attempting to establish a connection\n        to the server.",
+      "description": "Additional network settings to provide fine-grained control on how to connect to a specific server.\n\nAttributes:\n    tls_server_name_indication: The hostname to set within the Server Name Indication TLS extension.\n    tls_opportunistic_encryption: The protocol wrapped in TLS that the server expects. It allows SSLyze to figure out\n        how to establish a (Start)TLS connection to the server and what kind of \"hello\" message\n        (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If not supplied, standard\n        TLS will be used.\n    tls_client_auth_credentials: The client certificate and private key needed to perform mutual authentication\n        with the server. If not supplied, SSLyze will attempt to connect to the server without performing\n        client authentication.\n    xmpp_to_hostname: The hostname to set within the `to` attribute of the XMPP stream. If not supplied, the\n        server's hostname will be used. Should only be set if the supplied `tls_opportunistic_encryption` is an\n        XMPP protocol.\n    http_user_agent: The User-Agent to send in HTTP requests. If not supplied, a default Chrome-like\n        is used that includes SSLyze's version.\n    smtp_ehlo_hostname: The hostname to set in the SMTP EHLO. If not supplied, the default of \"sslyze.scan\"\n        will be used. Should only be set if the supplied `tls_opportunistic_encryption` is SMTP.\n    network_timeout: The timeout (in seconds) to be used when attempting to establish a connection to the\n        server.\n    network_max_retries: The number of retries SSLyze will perform when attempting to establish a connection\n        to the server.",
       "properties": {
         "tls_server_name_indication": {
           "title": "Tls Server Name Indication",
@@ -2127,7 +2150,7 @@
       "type": "string"
     },
     "sslyze_version": {
-      "default": "6.0.0",
+      "default": "6.1.0",
       "title": "Sslyze Version",
       "type": "string"
     },
