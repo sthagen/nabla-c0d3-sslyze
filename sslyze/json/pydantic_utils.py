@@ -1,11 +1,6 @@
 from typing import Any
+from typing import Annotated
 
-try:
-    # Python 3.9+
-    from typing import Annotated  # type: ignore
-except ImportError:
-    # Python 3.8
-    from typing_extensions import Annotated
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict
 

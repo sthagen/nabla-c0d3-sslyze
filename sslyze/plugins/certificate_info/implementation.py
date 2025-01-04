@@ -1,6 +1,7 @@
 from dataclasses import dataclass
+from ipaddress import ip_address
 from pathlib import Path
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple, Union
 
 import nassl
 
@@ -9,6 +10,7 @@ from sslyze.plugins.certificate_info._cert_chain_analyzer import (
     CertificateDeploymentAnalyzer,
     CertificateDeploymentAnalysisResult,
 )
+from cryptography.x509 import DNSName, IPAddress
 from sslyze.plugins.certificate_info._cli_connector import _CertificateInfoCliConnector
 from sslyze.plugins.certificate_info._get_cert_chain import get_certificate_chain, ArgumentsToGetCertificateChain
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
@@ -130,10 +132,21 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
             all_trust_stores.append(TrustStore(custom_ca_file, "Supplied CA file", "N/A"))
 
         analyzed_deployments = []
-        name_to_use_for_hostname_validation = server_info.network_configuration.tls_server_name_indication
+
+        # Figure out the server's subject (ie. hostname or IP) to use for certificate validation
+        subject_to_use_for_validation: Union[IPAddress, DNSName]
+        if server_info.network_configuration.tls_server_name_indication == server_info.server_location.ip_address:
+            # We don't know the server's hostname as only an IP address was supplied to sslyze
+            if not server_info.server_location.ip_address:
+                raise ValueError("Should never happen as it means the tls_server_name_indication would be None")
+
+            subject_to_use_for_validation = IPAddress(ip_address(server_info.server_location.ip_address))
+        else:
+            subject_to_use_for_validation = DNSName(server_info.network_configuration.tls_server_name_indication)
+
         for received_chain_as_pem, ocsp_response in all_configured_certificate_chains.values():
             deployment_analyzer = CertificateDeploymentAnalyzer(
-                server_hostname=name_to_use_for_hostname_validation,
+                server_subject=subject_to_use_for_validation,
                 server_certificate_chain_as_pem=received_chain_as_pem,
                 server_ocsp_response=ocsp_response,
                 trust_stores_for_validation=all_trust_stores,
@@ -143,6 +156,6 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
 
         # All done
         return CertificateInfoScanResult(
-            hostname_used_for_server_name_indication=name_to_use_for_hostname_validation,
+            hostname_used_for_server_name_indication=server_info.network_configuration.tls_server_name_indication,
             certificate_deployments=analyzed_deployments,
         )

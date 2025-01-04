@@ -22,6 +22,7 @@ from sslyze.server_connectivity import (
 # Classes for setting up scan commands and extra arguments
 from sslyze.plugins.scan_commands import ScanCommand
 from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArgument
+from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationExtraArgument
 
 # Classes for scanning the servers
 from sslyze.scanner.models import (
@@ -83,5 +84,6 @@ from sslyze.plugins.http_headers_plugin import (
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionScanResult
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanResult
 from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesScanResult, EllipticCurve
+from sslyze.plugins.ems_extension_plugin import EmsExtensionScanResult
 
 from sslyze.json.json_output import SslyzeOutputAsJson, ServerScanResultAsJson

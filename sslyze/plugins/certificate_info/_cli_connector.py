@@ -76,12 +76,18 @@ class _CertificateInfoCliConnector(
         result_as_txt.append(cls._format_field("Hostname sent for SNI:", server_name_indication))
 
         # Display each certificate deployment
-        result_as_txt.append(
-            cls._format_field("Number of certificates detected:", str(len(result.certificate_deployments)))
-        )
+        all_leaf_public_key_names = []
+        for cert_deployment in result.certificate_deployments:
+            leaf_certificate = cert_deployment.received_certificate_chain[0]
+            all_leaf_public_key_names.append(leaf_certificate.public_key().__class__.__name__)
+
+        leaf_certs_description = str(len(result.certificate_deployments))
+        leaf_certs_description += " (" + ", ".join(all_leaf_public_key_names) + ")"
+
+        result_as_txt.append(cls._format_field("Number of cert chains detected:", leaf_certs_description))
         for index, cert_deployment in enumerate(result.certificate_deployments):
             result_as_txt.append("\n")
-            result_as_txt.extend(cls._cert_deployment_to_console_output(index, cert_deployment))
+            result_as_txt.extend(cls._cert_deployment_to_console_output(index + 1, cert_deployment))
 
         return result_as_txt
 
@@ -91,14 +97,14 @@ class _CertificateInfoCliConnector(
     ) -> List[str]:
         leaf_certificate = cert_deployment.received_certificate_chain[0]
         deployment_as_txt = [
-            cls._format_subtitle(f"Certificate #{index} ( {leaf_certificate.public_key().__class__.__name__} )")
+            cls._format_subtitle(f"Certificate Chain #{index} ({leaf_certificate.public_key().__class__.__name__})")
         ]
 
         deployment_as_txt.extend(cls._get_basic_certificate_text(leaf_certificate))
 
         # Trust section
         deployment_as_txt.append("")
-        deployment_as_txt.append(cls._format_subtitle(f"Certificate #{index} - Trust"))
+        deployment_as_txt.append(cls._format_subtitle(f"Certificate Chain #{index} - Trust"))
 
         # Path validation that was successfully tested
         for path_result in cert_deployment.path_validation_results:
@@ -175,7 +181,7 @@ class _CertificateInfoCliConnector(
         deployment_as_txt.append(cls._format_field("Verified Chain contains SHA1:", sha1_text))
 
         # Extensions section
-        deployment_as_txt.extend(["", cls._format_subtitle(f"Certificate #{index} - Extensions")])
+        deployment_as_txt.extend(["", cls._format_subtitle(f"Certificate Chain #{index} - Extensions")])
 
         # OCSP must-staple
         must_staple_txt = (
@@ -198,7 +204,7 @@ class _CertificateInfoCliConnector(
         deployment_as_txt.append(cls._format_field("Certificate Transparency:", sct_txt))
 
         # OCSP stapling
-        deployment_as_txt.extend(["", cls._format_subtitle(f"Certificate #{index} - OCSP Stapling")])
+        deployment_as_txt.extend(["", cls._format_subtitle(f"Certificate Chain #{index} - OCSP Stapling")])
 
         if cert_deployment.ocsp_response is None:
             deployment_as_txt.append(cls._format_field("", "NOT SUPPORTED - Server did not send back an OCSP response"))
@@ -243,16 +249,16 @@ class _CertificateInfoCliConnector(
                             cls._format_field("Cert Status:", cert_deployment.ocsp_response.certificate_status.name),
                             cls._format_field("Cert Serial Number:", str(cert_deployment.ocsp_response.serial_number)),
                             cls._format_field(
-                                "This Update:", cert_deployment.ocsp_response.this_update.date().isoformat()
+                                "This Update:", cert_deployment.ocsp_response.this_update_utc.date().isoformat()
                             ),
                         ]
                     )
 
                     # The Next Update field is optional: https://github.com/nabla-c0d3/sslyze/issues/481
-                    if cert_deployment.ocsp_response.next_update is None:
+                    if cert_deployment.ocsp_response.next_update_utc is None:
                         next_update_str = "None"
                     else:
-                        next_update_str = cert_deployment.ocsp_response.next_update.date().isoformat()
+                        next_update_str = cert_deployment.ocsp_response.next_update_utc.date().isoformat()
                     ocsp_resp_txt.append(cls._format_field("Next Update:", next_update_str))
 
             deployment_as_txt.extend(ocsp_resp_txt)

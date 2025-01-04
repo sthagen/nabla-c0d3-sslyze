@@ -4,6 +4,7 @@ from sslyze.plugins.session_renegotiation_plugin import (
     SessionRenegotiationImplementation,
     SessionRenegotiationScanResult,
     SessionRenegotiationScanResultAsJson,
+    SessionRenegotiationExtraArgument,
 )
 
 from sslyze.server_setting import (
@@ -40,17 +41,26 @@ class TestSessionRenegotiationPlugin:
     @can_only_run_on_linux_64
     def test_renegotiation_is_vulnerable_to_client_renegotiation_dos(self) -> None:
         # Given a server that is vulnerable to client renegotiation DOS
+        expected_renegotiations_success_count = 3
+
         with LegacyOpenSslServer() as server:
             server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
+            extra_arg = SessionRenegotiationExtraArgument(
+                client_renegotiation_attempts=expected_renegotiations_success_count
+            )
             server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When testing for insecure reneg, it succeeds
-            result: SessionRenegotiationScanResult = SessionRenegotiationImplementation.scan_server(server_info)
+            result: SessionRenegotiationScanResult = SessionRenegotiationImplementation.scan_server(
+                server_info,
+                extra_arguments=extra_arg,
+            )
 
         # And the server is reported as vulnerable
         assert result.is_vulnerable_to_client_renegotiation_dos
+        assert result.client_renegotiations_success_count == expected_renegotiations_success_count
 
         # And a CLI output can be generated
         assert SessionRenegotiationImplementation.cli_connector_cls.result_to_console_output(result)

@@ -19,6 +19,7 @@ from sslyze import (
     RobotScanResultEnum,
     SupportedEllipticCurvesScanResult,
 )
+from sslyze.plugins.http_headers_plugin import HttpHeadersScanResult
 
 
 class _MozillaCiphersAsJson(pydantic.BaseModel):
@@ -88,10 +89,13 @@ SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: Set[ScanCommand] = {
     ScanCommand.HEARTBLEED,
     ScanCommand.ROBOT,
     ScanCommand.OPENSSL_CCS_INJECTION,
+    ScanCommand.TLS_FALLBACK_SCSV,
     ScanCommand.TLS_COMPRESSION,
     ScanCommand.SESSION_RENEGOTIATION,
     ScanCommand.CERTIFICATE_INFO,
     ScanCommand.ELLIPTIC_CURVES,
+    ScanCommand.TLS_EXTENDED_MASTER_SECRET,
+    # ScanCommand.HTTP_HEADERS,  # Disabled for now; see below
 }
 
 
@@ -154,6 +158,14 @@ class MozillaTlsConfigurationChecker:
         issues_with_tls_vulns = _check_tls_vulnerabilities(server_scan_result.scan_result)
         all_issues.update(issues_with_tls_vulns)
 
+        # TODO(AD): Re-enable this check. Right now nobody follows the recommendation of the Mozilla profile
+        # to have an HSTS max-age of 63072000 seconds (2 years).
+        # Check the HSTS header
+        # assert server_scan_result.scan_result.http_headers
+        # assert server_scan_result.scan_result.http_headers.result
+        # issue_with_hsts = _check_http_headers(server_scan_result.scan_result.http_headers.result, mozilla_config)
+        # all_issues.update(issue_with_hsts)
+
         if all_issues:
             raise ServerNotCompliantWithMozillaTlsConfiguration(
                 mozilla_config=against_config,
@@ -173,13 +185,11 @@ def _check_tls_curves(
 
     tls_curves_difference = supported_curves - mozilla_config.tls_curves
     if tls_curves_difference:
-        issues_with_tls_curves[
-            "tls_curves"
-        ] = f"TLS curves {tls_curves_difference} are supported, but should be rejected."
+        issues_with_tls_curves["tls_curves"] = (
+            f"TLS curves {tls_curves_difference} are supported, but should be rejected."
+        )
 
-    # TODO(AD): Disable the check on the curves; not even Google, Mozilla nor Cloudflare are compliant...
-    # return problems_with_tls_curves
-    return {}
+    return issues_with_tls_curves
 
 
 def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str, str]:
@@ -190,9 +200,15 @@ def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str
 
     assert scan_result.openssl_ccs_injection.result
     if scan_result.openssl_ccs_injection.result.is_vulnerable_to_ccs_injection:
-        issues_with_tls_vulns[
-            "tls_vulnerability_ccs_injection"
-        ] = "Server is vulnerable to the OpenSSL CCS injection attack."
+        issues_with_tls_vulns["tls_vulnerability_ccs_injection"] = (
+            "Server is vulnerable to the OpenSSL CCS injection attack."
+        )
+
+    assert scan_result.tls_fallback_scsv.result
+    if not scan_result.tls_fallback_scsv.result.supports_fallback_scsv:
+        issues_with_tls_vulns["tls_vulnerability_fallback_scsv"] = (
+            "Server is vulnerable to TLS downgrade attacks because it does not support the TLS_FALLBACK_SCSV mechanism."
+        )
 
     assert scan_result.heartbleed.result
     if scan_result.heartbleed.result.is_vulnerable_to_heartbleed:
@@ -204,9 +220,15 @@ def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str
 
     assert scan_result.session_renegotiation.result
     if not scan_result.session_renegotiation.result.supports_secure_renegotiation:
-        issues_with_tls_vulns[
-            "tls_vulnerability_renegotiation"
-        ] = "Server is vulnerable to the insecure renegotiation attack."
+        issues_with_tls_vulns["tls_vulnerability_renegotiation"] = (
+            "Server is vulnerable to the insecure renegotiation attack."
+        )
+
+    assert scan_result.tls_extended_master_secret.result
+    if not scan_result.tls_extended_master_secret.result.supports_ems_extension:
+        issues_with_tls_vulns["tls_vulnerability_extended_master_secret"] = (
+            "Server does not support the Extended Master Secret TLS extension."
+        )
 
     return issues_with_tls_vulns
 
@@ -252,21 +274,21 @@ def _check_tls_versions_and_ciphers(
     issues_with_tls_ciphers = {}
     tls_versions_difference = tls_versions_supported - mozilla_config.tls_versions
     if tls_versions_difference:
-        issues_with_tls_ciphers[
-            "tls_versions"
-        ] = f"TLS versions {tls_versions_difference} are supported, but should be rejected."
+        issues_with_tls_ciphers["tls_versions"] = (
+            f"TLS versions {tls_versions_difference} are supported, but should be rejected."
+        )
 
     tls_1_3_cipher_suites_difference = tls_1_3_cipher_suites_supported - mozilla_config.ciphersuites
     if tls_1_3_cipher_suites_difference:
-        issues_with_tls_ciphers[
-            "ciphersuites"
-        ] = f"TLS 1.3 cipher suites {tls_1_3_cipher_suites_difference} are supported, but should be rejected."
+        issues_with_tls_ciphers["ciphersuites"] = (
+            f"TLS 1.3 cipher suites {tls_1_3_cipher_suites_difference} are supported, but should be rejected."
+        )
 
     cipher_suites_difference = cipher_suites_supported - mozilla_config.ciphers.iana
     if cipher_suites_difference:
-        issues_with_tls_ciphers[
-            "ciphers"
-        ] = f"Cipher suites {cipher_suites_difference} are supported, but should be rejected."
+        issues_with_tls_ciphers["ciphers"] = (
+            f"Cipher suites {cipher_suites_difference} are supported, but should be rejected."
+        )
 
     if mozilla_config.ecdh_param_size and smallest_ecdh_param_size < mozilla_config.ecdh_param_size:
         issues_with_tls_ciphers["ecdh_param_size"] = (
@@ -294,28 +316,26 @@ def _check_certificates(
         # Validate certificate trust
         leaf_cert = cert_deployment.received_certificate_chain[0]
         if not cert_deployment.verified_certificate_chain:
-            issues_with_certificates[
-                "certificate_path_validation"
-            ] = f"Certificate path validation failed for {leaf_cert.subject.rfc4514_string()}."
+            issues_with_certificates["certificate_path_validation"] = (
+                f"Certificate path validation failed for {leaf_cert.subject.rfc4514_string()}."
+            )
 
         # Validate the public key
         public_key = leaf_cert.public_key()
         if isinstance(public_key, EllipticCurvePublicKey):
             deployed_key_algorithms.add("ecdsa")
             if public_key.curve.name not in mozilla_config.certificate_curves:
-                # TODO(AD): Disable the check on the curves; not even Google and Cloudflare are compliant...
-                pass
-                # problems_with_certificates["certificate_curves"] = (
-                #     f"Certificate curve is {public_key.curve.name},"
-                #     f" should be one of {expected_mozilla_config.certificate_curves}."
-                # )
+                issues_with_certificates["certificate_curves"] = (
+                    f"Certificate curve is {public_key.curve.name},"
+                    f" should be one of {mozilla_config.certificate_curves}."
+                )
 
         elif isinstance(public_key, RSAPublicKey):
             deployed_key_algorithms.add("rsa")
             if mozilla_config.rsa_key_size and public_key.key_size < mozilla_config.rsa_key_size:
-                issues_with_certificates[
-                    "rsa_key_size"
-                ] = f"RSA key size is {public_key.key_size}, minimum allowed is {mozilla_config.rsa_key_size}."
+                issues_with_certificates["rsa_key_size"] = (
+                    f"RSA key size is {public_key.key_size}, minimum allowed is {mozilla_config.rsa_key_size}."
+                )
 
         else:
             deployed_key_algorithms.add(public_key.__class__.__name__)
@@ -361,3 +381,25 @@ def _check_certificates(
     # TODO(AD): Maybe add check for ocsp_staple but that one seems optional in https://ssl-config.mozilla.org/
 
     return issues_with_certificates
+
+
+def _check_http_headers(
+    http_headers_result: HttpHeadersScanResult,
+    mozilla_config: _MozillaTlsConfigurationAsJson,
+) -> Dict[str, str]:
+    issues_with_http_headers = {}
+
+    if not http_headers_result.strict_transport_security_header:
+        issues_with_http_headers["hsts_min_age"] = "HSTS header is missing."
+
+    elif not http_headers_result.strict_transport_security_header.max_age:
+        issues_with_http_headers["hsts_min_age"] = "HSTS max-age directive is missing."
+
+    else:
+        if http_headers_result.strict_transport_security_header.max_age < mozilla_config.hsts_min_age:
+            issues_with_http_headers["hsts_min_age"] = (
+                f"HSTS max-age is {http_headers_result.strict_transport_security_header.max_age},"
+                f" should be superior or equal to {mozilla_config.hsts_min_age}."
+            )
+
+    return issues_with_http_headers

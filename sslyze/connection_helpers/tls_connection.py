@@ -127,6 +127,7 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     # enabled in the client; for example client only supports EC cipher suites but server returned an RSA certificate
     "wrong certificate type": "Server returned wrong certificate type",
     "invalid encoding": "TLS error: Invalid encoding",
+    "certificate unknown": "TLS alert: certificate unknown",
 }
 
 
@@ -233,7 +234,9 @@ class SslConnection:
         # Do the Opportunistic/StartTLS negotiation if needed
         if self._network_configuration.tls_opportunistic_encryption:
             opportunistic_tls_helper = get_opportunistic_tls_helper(
-                self._network_configuration.tls_opportunistic_encryption, self._network_configuration.xmpp_to_hostname
+                self._network_configuration.tls_opportunistic_encryption,
+                self._network_configuration.xmpp_to_hostname,
+                self._network_configuration.smtp_ehlo_hostname,
             )
             try:
                 opportunistic_tls_helper.prepare_socket_for_tls_handshake(sock)
@@ -315,7 +318,7 @@ class SslConnection:
             )
         except OSError as e:
             # OSError is the parent of all (non-TLS) socket/connection errors so it should be last
-            if "Nassl SSL handshake failed" in e.args[0]:
+            if "Nassl SSL handshake failed" in str(e.args):
                 # Special error returned by nassl
                 raise ServerRejectedTlsHandshake(
                     server_location=self._server_location,

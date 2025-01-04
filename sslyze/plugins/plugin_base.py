@@ -1,5 +1,4 @@
-"""Main abstract plugin classes from which all the plugins should inherit.
-"""
+"""Main abstract plugin classes from which all the plugins should inherit."""
 
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor

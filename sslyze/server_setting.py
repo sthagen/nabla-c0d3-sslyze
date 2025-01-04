@@ -71,11 +71,11 @@ class ServerNetworkLocation:
             server's IP address and connecting to it.
     """
 
-    hostname: str
+    hostname: str  # TODO(AD): Should be None when no hostname is supplied (ie. only an IP address)
     port: int = 443
 
     # Set if SSLyze is directly connecting to the server ie. connection_type == DIRECT
-    ip_address: Optional[str] = None
+    ip_address: Optional[str] = None  # TODO(AD): Should be an IPv4Address or IPv6Address
 
     # Set if SSLyze is connecting via a proxy ie. connection_type == VIA_HTTP_PROXY
     http_proxy_settings: Optional[HttpProxySettings] = None
@@ -163,7 +163,7 @@ class ServerNetworkConfiguration:
 
     Attributes:
         tls_server_name_indication: The hostname to set within the Server Name Indication TLS extension.
-        tls_wrapped_protocol: The protocol wrapped in TLS that the server expects. It allows SSLyze to figure out
+        tls_opportunistic_encryption: The protocol wrapped in TLS that the server expects. It allows SSLyze to figure out
             how to establish a (Start)TLS connection to the server and what kind of "hello" message
             (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If not supplied, standard
             TLS will be used.
@@ -171,8 +171,12 @@ class ServerNetworkConfiguration:
             with the server. If not supplied, SSLyze will attempt to connect to the server without performing
             client authentication.
         xmpp_to_hostname: The hostname to set within the `to` attribute of the XMPP stream. If not supplied, the
-            server's hostname will be used. Should only be set if the supplied `tls_wrapped_protocol` is an
+            server's hostname will be used. Should only be set if the supplied `tls_opportunistic_encryption` is an
             XMPP protocol.
+        http_user_agent: The User-Agent to send in HTTP requests. If not supplied, a default Chrome-like
+            is used that includes SSLyze's version.
+        smtp_ehlo_hostname: The hostname to set in the SMTP EHLO. If not supplied, the default of "sslyze.scan"
+            will be used. Should only be set if the supplied `tls_opportunistic_encryption` is SMTP.
         network_timeout: The timeout (in seconds) to be used when attempting to establish a connection to the
             server.
         network_max_retries: The number of retries SSLyze will perform when attempting to establish a connection
@@ -184,6 +188,8 @@ class ServerNetworkConfiguration:
     tls_client_auth_credentials: Optional[ClientAuthenticationCredentials] = None
 
     xmpp_to_hostname: Optional[str] = None
+    smtp_ehlo_hostname: Optional[str] = None
+    http_user_agent: Optional[str] = None
 
     network_timeout: int = 5
     network_max_retries: int = 3
@@ -195,11 +201,27 @@ class ServerNetworkConfiguration:
         ]:
             if not self.xmpp_to_hostname:
                 # Official workaround for frozen: https://docs.python.org/3/library/dataclasses.html#frozen-instances
-                # If no XMPP to hostname was supplied, used the ones from SNI
+                # If no XMPP to hostname was supplied, use the ones from SNI
                 object.__setattr__(self, "xmpp_to_hostname", self.tls_server_name_indication)
         else:
             if self.xmpp_to_hostname:
                 raise InvalidServerNetworkConfigurationError("Can only specify xmpp_to for the XMPP StartTLS protocol.")
+
+        if self.tls_opportunistic_encryption in [
+            ProtocolWithOpportunisticTlsEnum.SMTP,
+        ]:
+            if not self.smtp_ehlo_hostname:
+                object.__setattr__(self, "smtp_ehlo_hostname", "sslyze.scan")
+        else:
+            if self.smtp_ehlo_hostname:
+                raise InvalidServerNetworkConfigurationError(
+                    "Can only specify smtp_ehlo_hostname for the SMTP StartTLS protocol."
+                )
+
+        if self.tls_opportunistic_encryption and self.http_user_agent:
+            raise InvalidServerNetworkConfigurationError(
+                "Cannot specify both tls_opportunistic_encryption and http_user_agent"
+            )
 
     @classmethod
     def default_for_server_location(cls, server_location: ServerNetworkLocation) -> "ServerNetworkConfiguration":
