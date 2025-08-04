@@ -129,7 +129,7 @@
       "type": "object"
     },
     "CertificateInfoScanResultAsJson": {
-      "description": "The result of retrieving and analyzing a server's certificates to verify their validity.\n\nAttributes:\n    hostname_used_for_server_name_indication: The hostname sent by SSLyze as the Server Name Indication extension.\n    certificate_deployments: A list of leaf certificates detected by SSLyze and the corresponding analysis. Most\n        servers only deploy one leaf certificate, but some websites (such as Facebook) return different leaf\n        certificates depending on the client, as a way to maximize compatibility with older clients/devices.",
+      "description": "The result of retrieving and analyzing a server's certificates to verify their validity.\n\nAttributes:\n    hostname_used_for_server_name_indication: The hostname sent by SSLyze as the Server Name Indication (SNI)\n        extension.\n    certificate_deployments: The list of certificate deployments detected by SSLyze with SNI enabled. Most servers\n        only deploy one leaf certificate, but some websites (such as Facebook) return different leaf certificates\n        depending on the client, as a way to maximize compatibility with older clients/devices.\n    certificate_deployment_with_sni_disabled: The certificate deployment retrieved by SSLyze with SNI disabled.\n        This allows discovery of default certificates that servers return to clients that don't support or provide\n        SNI. Will be ``None`` if the non-SNI connection failed.\n        Most clients always enable SNI when connecting to a server so this certificate deployment can be ignored.",
       "properties": {
         "hostname_used_for_server_name_indication": {
           "title": "Hostname Used For Server Name Indication",
@@ -141,6 +141,17 @@
           },
           "title": "Certificate Deployments",
           "type": "array"
+        },
+        "certificate_deployment_with_sni_disabled": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/_CertificateDeploymentAnalysisResultAsJson"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -2197,7 +2208,7 @@
       "type": "string"
     },
     "sslyze_version": {
-      "default": "6.1.0",
+      "default": "6.2.0",
       "title": "Sslyze Version",
       "type": "string"
     },

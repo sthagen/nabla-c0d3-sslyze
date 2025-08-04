@@ -65,7 +65,7 @@ class _ScanJobResultEnum(Enum):
 
 class _SessionRenegotiationCliConnector(ScanCommandCliConnector[SessionRenegotiationScanResult, None]):
     _cli_option = "reneg"
-    _cli_description = "Test a server for for insecure TLS renegotiation and client-initiated renegotiation."
+    _cli_description = "Test a server for insecure TLS renegotiation and client-initiated renegotiation."
 
     @classmethod
     def result_to_console_output(cls, result: SessionRenegotiationScanResult) -> List[str]:

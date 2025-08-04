@@ -18,7 +18,7 @@ Key features
 * Focus on speed and reliability: SSLyze is a battle-tested tool that is used to reliably scan **hundreds of thousands**
 of servers every day.
 * Easy to operationalize: SSLyze can be directly run from CI/CD, in order to continuously check a server against 
-Mozilla's recommended TLS configuration.
+Mozilla's recommended TLS configurations.
 * Fully documented [Python API](https://nabla-c0d3.github.io/sslyze/documentation/) to run scans directly from any
 Python application, such as a function deployed to AWS Lambda.
 * Support for scanning non-HTTP servers including SMTP, XMPP, LDAP, POP, IMAP, RDP, Postgres and FTP servers.
@@ -82,7 +82,20 @@ mozilla.com:443: FAILED - Not compliant.
     * ciphers: Cipher suites {'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384', 'TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256'} are supported, but should be rejected.
 ```
 
-This can be used to easily run an SSLyze scan as a CI/CD step.
+Alternatively, you can check against your own custom TLS configuration by providing a JSON file that follows Mozilla's TLS configuration format:
+
+```
+$ python -m sslyze --custom_tls_config custom_tls_config_example.json mozilla.com
+```
+```
+Checking results against custom TLS configuration.
+
+mozilla.com:443: OK - Compliant.
+```
+
+See `custom_tls_config_example.json` for an example a custom TLS configuration that can be used by SSLyze.
+
+**This functionality can be used to easily run an SSLyze scan as a CI/CD step in order to ensure TLS compliance.**
 
 Development environment
 -----------------------

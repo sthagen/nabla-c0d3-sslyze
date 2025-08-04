@@ -1,10 +1,14 @@
+from pathlib import Path
 import sys
+from tempfile import NamedTemporaryFile
 from unittest import mock
 
 import pytest
 
 from sslyze import SslyzeOutputAsJson
 from sslyze.__main__ import main
+from sslyze.cli.command_line_parser import CommandLineParser, CommandLineParsingError
+from sslyze.mozilla_tls_profile.tls_config_checker import TlsConfigurationEnum
 
 
 class TestMain:
@@ -42,3 +46,35 @@ class TestMain:
         # And the JSON output has the expected format
         parsed_output = SslyzeOutputAsJson.model_validate_json(json_output)
         assert parsed_output
+
+    def test_command_line_has_valid_custom_tls_config_file(self):
+        # Given a valid custom TLS configuration file
+        custom_config_path = Path(__file__).parent.parent / "custom_tls_config_example.json"
+        print(custom_config_path)
+        assert custom_config_path.exists()
+
+        # When parsing a command line that specifies --custom_tls_config
+        command_line = ["sslyze", "--custom_tls_config", str(custom_config_path), "www.example.com"]
+        with mock.patch.object(sys, "argv", command_line):
+            parser = CommandLineParser("test")
+            parsed_command_line = parser.parse_command_line()
+
+        # Then it should parse successfully
+        assert parsed_command_line.tls_config_to_check_against_as_enum == TlsConfigurationEnum.CUSTOM
+        assert parsed_command_line.tls_config_to_check_against
+        assert parsed_command_line.tls_config_to_check_against.tls_versions == {"TLSv1.2", "TLSv1.3"}
+
+    def test_command_line_has_invalid_custom_tls_config_file(self):
+        # Given TLS configuration that actually contains invalid JSON
+        with NamedTemporaryFile(mode="w", suffix=".json", delete=False) as temp_file:
+            temp_file.write('{"invalid": json syntax}')
+            temp_file_path = temp_file.name
+
+        # When parsing a command line that specifies --custom_tls_config
+        command_line = ["sslyze", "--custom_tls_config", temp_file_path, "www.example.com"]
+        with mock.patch.object(sys, "argv", command_line):
+            parser = CommandLineParser("test")
+
+            # Then the invalid JSON file is rejected
+            with pytest.raises(CommandLineParsingError, match="Could not parse"):
+                parser.parse_command_line()

@@ -289,6 +289,9 @@ class CertificateInfoScanResultAsJson(BaseModelWithOrmMode):
     hostname_used_for_server_name_indication: str
     certificate_deployments: List[_CertificateDeploymentAnalysisResultAsJson]
 
+    # Default argument for backward compatibility as this field was added in v6.2.0
+    certificate_deployment_with_sni_disabled: Optional[_CertificateDeploymentAnalysisResultAsJson] = None
+
 
 assert CertificateInfoScanResult.__doc__
 CertificateInfoScanResultAsJson.__doc__ = CertificateInfoScanResult.__doc__

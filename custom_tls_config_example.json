@@ -1,0 +1,59 @@
+{
+    "tls_versions": ["TLSv1.2", "TLSv1.3"],
+    "certificate_types": ["ecdsa", "rsa"],
+    "certificate_curves": ["prime256v1", "secp384r1"],
+    "certificate_signatures": [
+        "ecdsa-with-SHA256",
+        "ecdsa-with-SHA384", 
+        "sha256WithRSAEncryption",
+        "sha384WithRSAEncryption"
+    ],
+    "ciphersuites": [
+        "TLS_AES_256_GCM_SHA384",
+        "TLS_CHACHA20_POLY1305_SHA256",
+        "TLS_AES_128_GCM_SHA256"
+    ],
+    "ciphers": {
+        "caddy": [
+            "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+            "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+            "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"
+        ],
+        "go": [
+            "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+            "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305",
+            "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+        ],
+        "iana": [
+            "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+            "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+            "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"
+        ],
+        "openssl": [
+            "ECDHE-ECDSA-AES256-GCM-SHA384",
+            "ECDHE-RSA-AES256-GCM-SHA384",
+            "ECDHE-ECDSA-AES128-GCM-SHA256",
+            "ECDHE-RSA-AES128-GCM-SHA256",
+            "ECDHE-ECDSA-CHACHA20-POLY1305",
+            "ECDHE-RSA-CHACHA20-POLY1305"
+        ]
+    },
+    "tls_curves": ["X25519", "prime256v1", "secp384r1"],
+    "rsa_key_size": 2048,
+    "dh_param_size": 2048,
+    "ecdh_param_size": 256,
+    "hsts_min_age": 31536000,
+    "maximum_certificate_lifespan": 90,
+    "recommended_certificate_lifespan": 90,
+    "ocsp_staple": true,
+    "server_preferred_order": false
+}

@@ -35,7 +35,7 @@ class TestEllipticCurvesPluginWithOnlineServer:
 class TestEllipticCurvesPluginWithLocalServer:
     def test_supported_curves(self) -> None:
         # Given a server to scan that supports ECDH cipher suites with specific curves
-        server_curves = ["X25519", "X448", "prime256v1", "secp384r1", "secp521r1"]
+        server_curves = ["X25519", "X448", "secp384r1", "secp521r1"]
         with ModernOpenSslServer(groups=":".join(server_curves)) as server:
             server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port

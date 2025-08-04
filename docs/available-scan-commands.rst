@@ -163,7 +163,7 @@ Result class
 Insecure Renegotiation
 **********************
 
-**ScanCommand.SESSION_RENEGOTIATION**: Test a server for for insecure TLS renegotiation and client-initiated renegotiation.
+**ScanCommand.SESSION_RENEGOTIATION**: Test a server for insecure TLS renegotiation and client-initiated renegotiation.
 
 Result class
 ============

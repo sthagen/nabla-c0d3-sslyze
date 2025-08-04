@@ -75,7 +75,7 @@ class _CertificateInfoCliConnector(
         server_name_indication = result.hostname_used_for_server_name_indication
         result_as_txt.append(cls._format_field("Hostname sent for SNI:", server_name_indication))
 
-        # Display each certificate deployment
+        # Display a summary of the certificate deployments
         all_leaf_public_key_names = []
         for cert_deployment in result.certificate_deployments:
             leaf_certificate = cert_deployment.received_certificate_chain[0]
@@ -85,26 +85,45 @@ class _CertificateInfoCliConnector(
         leaf_certs_description += " (" + ", ".join(all_leaf_public_key_names) + ")"
 
         result_as_txt.append(cls._format_field("Number of cert chains detected:", leaf_certs_description))
+        no_sni_cert_txt = "Yes" if result.certificate_deployment_with_sni_disabled else "No"
+        result_as_txt.append(cls._format_field("Cert chain with SNI disabled:", no_sni_cert_txt))
+
+        # Display each certificate deployment
         for index, cert_deployment in enumerate(result.certificate_deployments):
             result_as_txt.append("\n")
-            result_as_txt.extend(cls._cert_deployment_to_console_output(index + 1, cert_deployment))
+            result_as_txt.extend(
+                cls._cert_deployment_to_console_output(index + 1, cert_deployment, was_sni_disabled=False)
+            )
+
+        # Display the non-SNI certificate deployment if present
+        if result.certificate_deployment_with_sni_disabled:
+            result_as_txt.append("")
+            result_as_txt.extend(
+                cls._cert_deployment_to_console_output(
+                    None, result.certificate_deployment_with_sni_disabled, was_sni_disabled=True
+                )
+            )
 
         return result_as_txt
 
     @classmethod
     def _cert_deployment_to_console_output(
-        cls, index: int, cert_deployment: CertificateDeploymentAnalysisResult
+        cls, index: Optional[int], cert_deployment: CertificateDeploymentAnalysisResult, was_sni_disabled: bool
     ) -> List[str]:
         leaf_certificate = cert_deployment.received_certificate_chain[0]
-        deployment_as_txt = [
-            cls._format_subtitle(f"Certificate Chain #{index} ({leaf_certificate.public_key().__class__.__name__})")
-        ]
+        if was_sni_disabled:
+            deployment_as_txt = [cls._format_subtitle("Certificate Chain with SNI disabled - can be ignored")]
+        else:
+            deployment_as_txt = [
+                cls._format_subtitle(
+                    f"Certificate Chain #{index} ({leaf_certificate.public_key().__class__.__name__}, SNI enabled)"
+                )
+            ]
 
         deployment_as_txt.extend(cls._get_basic_certificate_text(leaf_certificate))
 
         # Trust section
-        deployment_as_txt.append("")
-        deployment_as_txt.append(cls._format_subtitle(f"Certificate Chain #{index} - Trust"))
+        deployment_as_txt.append(cls._format_subtitle("Trust"))
 
         # Path validation that was successfully tested
         for path_result in cert_deployment.path_validation_results:
@@ -181,7 +200,7 @@ class _CertificateInfoCliConnector(
         deployment_as_txt.append(cls._format_field("Verified Chain contains SHA1:", sha1_text))
 
         # Extensions section
-        deployment_as_txt.extend(["", cls._format_subtitle(f"Certificate Chain #{index} - Extensions")])
+        deployment_as_txt.append(cls._format_subtitle("Certificate Extensions"))
 
         # OCSP must-staple
         must_staple_txt = (
@@ -204,7 +223,7 @@ class _CertificateInfoCliConnector(
         deployment_as_txt.append(cls._format_field("Certificate Transparency:", sct_txt))
 
         # OCSP stapling
-        deployment_as_txt.extend(["", cls._format_subtitle(f"Certificate Chain #{index} - OCSP Stapling")])
+        deployment_as_txt.append(cls._format_subtitle("OCSP Stapling"))
 
         if cert_deployment.ocsp_response is None:
             deployment_as_txt.append(cls._format_field("", "NOT SUPPORTED - Server did not send back an OCSP response"))

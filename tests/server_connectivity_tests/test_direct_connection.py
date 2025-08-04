@@ -103,6 +103,24 @@ class TestServerConnectivityTester:
         # And it detected that only TLS 1.0 is supported
         assert tls_probing_result.highest_tls_version_supported == TlsVersionEnum.TLS_1_0
 
+    def test_tls_1_3_only(self):
+        # Given a server that only supports TLS 1.3
+        server_location = ServerNetworkLocation(hostname="tls13.1d.pw", port=443)
+
+        # When testing connectivity against it
+        tls_probing_result = check_connectivity_to_server(
+            server_location=server_location,
+            network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
+        )
+
+        # It succeeds
+        assert tls_probing_result
+        assert tls_probing_result.client_auth_requirement
+        assert tls_probing_result.cipher_suite_supported
+
+        # And it detected that only TLS 1.3 is supported
+        assert tls_probing_result.highest_tls_version_supported == TlsVersionEnum.TLS_1_3
+
     @pytest.mark.skipif(not is_ipv6_available(), reason="IPv6 not available")
     def test_ipv6(self):
         # Given a server accessible via IPv6

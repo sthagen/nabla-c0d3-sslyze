@@ -14,10 +14,11 @@ from sslyze import (
     ServerConnectivityStatusEnum,
 )
 from sslyze.json.json_output import InvalidServerStringAsJson
-from sslyze.mozilla_tls_profile.mozilla_config_checker import (
-    MozillaTlsConfigurationChecker,
-    ServerNotCompliantWithMozillaTlsConfiguration,
+from sslyze.mozilla_tls_profile.tls_config_checker import (
+    check_server_against_tls_configuration,
+    ServerNotCompliantWithTlsConfiguration,
     ServerScanResultIncomplete,
+    TlsConfigurationEnum,
 )
 
 
@@ -87,7 +88,7 @@ def main() -> None:
         json_output_as_str = json_output.model_dump_json(indent=2)
         json_file_out.write(json_output_as_str)
 
-    # If we printed the JSON results to the console, don't run the Mozilla compliance check so we return valid JSON
+    # If we printed the JSON results to the console, don't run the TLS compliance check so we return valid JSON
     if parsed_command_line.should_print_json_to_console:
         sys.exit(0)
 
@@ -95,29 +96,37 @@ def main() -> None:
         # There are no results to present: all supplied server strings were invalid?
         sys.exit(0)
 
-    # Check the results against the Mozilla config if needed
+    # Check the results against the TLS config if needed
     are_all_servers_compliant = True
     # TODO(AD): Expose format_title method
-    title = ObserverToGenerateConsoleOutput._format_title("Compliance against Mozilla TLS configuration")
+    title = ObserverToGenerateConsoleOutput._format_title("Compliance against TLS configuration")
     print()
     print(title)
-    if not parsed_command_line.check_against_mozilla_config:
-        print("    Disabled; use --mozilla_config={old, intermediate, modern}.\n")
-    else:
+    if not parsed_command_line.tls_config_to_check_against_as_enum:
         print(
-            f'    Checking results against Mozilla\'s "{parsed_command_line.check_against_mozilla_config}"'
-            f" configuration. See https://ssl-config.mozilla.org/ for more details.\n"
+            "    Disabled; use --mozilla_config={old, intermediate, modern} or --custom_tls_config=path/to/profile.json.\n"
         )
-        mozilla_checker = MozillaTlsConfigurationChecker.get_default()
+    else:
+        assert parsed_command_line.tls_config_to_check_against, "Should always be set"
+
+        if parsed_command_line.tls_config_to_check_against_as_enum == TlsConfigurationEnum.CUSTOM:
+            print("    Checking results against custom TLS configuration.\n")
+        else:
+            config_name = parsed_command_line.tls_config_to_check_against_as_enum.value
+            print(
+                f'    Checking results against Mozilla\'s "{config_name}"'
+                f" configuration. See https://ssl-config.mozilla.org/ for more details.\n"
+            )
+
         for server_scan_result in all_server_scan_results:
             try:
-                mozilla_checker.check_server(
-                    against_config=parsed_command_line.check_against_mozilla_config,
+                check_server_against_tls_configuration(
                     server_scan_result=server_scan_result,
+                    tls_config_to_check_against=parsed_command_line.tls_config_to_check_against,
                 )
                 print(f"    {server_scan_result.server_location.display_string}: OK - Compliant.\n")
 
-            except ServerNotCompliantWithMozillaTlsConfiguration as e:
+            except ServerNotCompliantWithTlsConfiguration as e:
                 are_all_servers_compliant = False
                 print(f"    {server_scan_result.server_location.display_string}: FAILED - Not compliant.")
                 for criteria, error_description in e.issues.items():

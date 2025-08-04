@@ -24,6 +24,6 @@ jobs:
 
     - name: Test SSLyze module setup
       run: |
-        python setup.py install
+        python -m pip install -e .
         cd docs  # Switch folder to avoid conflicts between ./sslyze and the installed sslyze module
         python ../api_sample.py
