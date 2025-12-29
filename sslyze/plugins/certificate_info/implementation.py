@@ -83,14 +83,15 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
             # Get the default certificate chain sent to clients using TLS 1.3
             call_arguments.append((server_info, custom_ca_file, TlsVersionEnum.TLS_1_3, None, True))
 
-            # Get the other certificate chains sent to clients using TLS 1.2 that support or don't support RSA
-            call_arguments.append((server_info, custom_ca_file, TlsVersionEnum.TLS_1_2, "RSA", True))
-            call_arguments.append((server_info, custom_ca_file, TlsVersionEnum.TLS_1_2, "ALL:-RSA", True))
+            # Get the other certificate chains sent to clients using TLS 1.2 that support
+            #  or don't support RSA for authentication
+            call_arguments.append((server_info, custom_ca_file, TlsVersionEnum.TLS_1_2, "aRSA", True))
+            call_arguments.append((server_info, custom_ca_file, TlsVersionEnum.TLS_1_2, "ALL:-aRSA", True))
         else:
-            # Get the certificate chains sent to clients that support or don't support RSA
+            # Get the certificate chains sent to clients that support or don't support RSA for authentication
             call_arguments.append((server_info, custom_ca_file, None, None, True))
-            call_arguments.append((server_info, custom_ca_file, None, "RSA", True))
-            call_arguments.append((server_info, custom_ca_file, None, "ALL:-RSA", True))
+            call_arguments.append((server_info, custom_ca_file, None, "aRSA", True))
+            call_arguments.append((server_info, custom_ca_file, None, "ALL:-aRSA", True))
 
         # Additionally, get the default certificate chain sent to clients without SNI
         call_arguments.append((server_info, custom_ca_file, None, None, False))
@@ -114,9 +115,10 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
         # Process the results
         # Leaf certificate => certificate chain, OCSP response, was_sni_used
         all_configured_certificate_chains: Dict[str, _ListofPemCertificatesAndOptionalOcspResponse] = {}
-        all_handshake_failed_exceptions: List[TlsHandshakeFailed] = []
+        all_handshake_failed_exceptions: List[Exception] = []
         custom_ca_file = None
         non_sni_chain_and_ocsp_response: Optional[_ListofPemCertificatesAndOptionalOcspResponse] = None
+        server_did_not_send_a_certificate = False
         for completed_job in scan_job_results:
             try:
                 received_chain_as_pem, ocsp_response, custom_ca_file, was_sni_used = completed_job.get_result()
@@ -127,6 +129,22 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
                 # or when connectivity is bad
                 all_handshake_failed_exceptions.append(exc)
 
+            except nassl._nassl.OpenSSLError as exc:
+                if "unrecognized name" in exc.args[0]:
+                    # Can happen when trying to connect without SNI
+                    all_handshake_failed_exceptions.append(exc)
+                else:
+                    raise
+
+            except ValueError as exc:
+                if "peer did not present a certificate" in exc.args[0]:
+                    # Some servers don't send back a certificate chain at all (ie. ANON cipher suites)
+                    # https://github.com/nabla-c0d3/sslyze/issues/705
+                    server_did_not_send_a_certificate = True
+                    all_handshake_failed_exceptions.append(exc)
+                else:
+                    raise
+
             else:
                 if not was_sni_used:
                     # This is the SNI-disabled deployment, we handle it separately
@@ -136,11 +154,15 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
                     all_configured_certificate_chains[received_chain_as_pem[0]] = received_chain_as_pem, ocsp_response
 
         if len(all_handshake_failed_exceptions) == cls._EXPECTED_SCAN_JOB_RESULTS_COUNT:
-            # All TLS handshakes failed: bad connectivity to the server
-            # Re-raise one of the handshake exceptions
-            raise all_handshake_failed_exceptions[0]
+            # All TLS handshakes failed; either:
+            if server_did_not_send_a_certificate:
+                # The server is only supporting ANON cipher suites (ie. no certificate)
+                pass
+            else:
+                # Or we have bad connectivity to the server: re-raise one of the handshake exceptions
+                raise all_handshake_failed_exceptions[0]
 
-        if not all_configured_certificate_chains:
+        if not all_configured_certificate_chains and not server_did_not_send_a_certificate:
             raise ValueError("Should never happen")
 
         # Then validate each certificate/chain deployment

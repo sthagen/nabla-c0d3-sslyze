@@ -82,7 +82,8 @@ class _CertificateInfoCliConnector(
             all_leaf_public_key_names.append(leaf_certificate.public_key().__class__.__name__)
 
         leaf_certs_description = str(len(result.certificate_deployments))
-        leaf_certs_description += " (" + ", ".join(all_leaf_public_key_names) + ")"
+        if result.certificate_deployments:
+            leaf_certs_description += " (" + ", ".join(all_leaf_public_key_names) + ")"
 
         result_as_txt.append(cls._format_field("Number of cert chains detected:", leaf_certs_description))
         no_sni_cert_txt = "Yes" if result.certificate_deployment_with_sni_disabled else "No"

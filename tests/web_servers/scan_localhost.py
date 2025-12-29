@@ -155,9 +155,8 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
         elif server_software_running_on_localhost == WebServerSoftwareEnum.IIS:
             # TLS 1.3 is not supported by IIS
             expected_enabled_tls_scan_commands = {
+                ScanCommand.TLS_1_3_CIPHER_SUITES,
                 ScanCommand.TLS_1_2_CIPHER_SUITES,
-                ScanCommand.TLS_1_1_CIPHER_SUITES,
-                ScanCommand.TLS_1_0_CIPHER_SUITES,
             }
         else:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")

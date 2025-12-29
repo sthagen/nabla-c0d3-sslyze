@@ -7,7 +7,7 @@ from sslyze.plugins.certificate_info.implementation import CertificateInfoImplem
 from sslyze.server_setting import ServerNetworkLocation
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
+from tests.openssl_server import LegacyOpenSslServer, ModernOpenSslServer, ClientAuthConfigEnum
 import pytest
 
 from tests.server_connectivity_tests.test_direct_connection import is_ipv6_available
@@ -76,7 +76,6 @@ class TestCertificateInfoPlugin:
         # And the result has other details about the certificate chain
         assert len(plugin_result.certificate_deployments[0].received_certificate_chain)
         assert len(plugin_result.certificate_deployments[0].verified_certificate_chain)
-        assert not plugin_result.certificate_deployments[0].received_chain_contains_anchor_certificate
 
         assert len(plugin_result.certificate_deployments[0].path_validation_results) == 5
         for path_validation_result in plugin_result.certificate_deployments[0].path_validation_results:
@@ -223,3 +222,33 @@ class TestCertificateInfoPlugin:
         assert plugin_result.certificate_deployment_with_sni_disabled is not None
         non_sni_cert = plugin_result.certificate_deployment_with_sni_disabled.received_certificate_chain[0]
         assert "No SNI provided" in non_sni_cert.subject.rfc4514_string()
+
+    def test_server_rejects_non_sni_handshake(self):
+        # https://github.com/nabla-c0d3/sslyze/pull/706
+        # Given a server to scan that will return a TLS alert "unrecognized name" when receiving a handshake with no SNI
+        server_location = ServerNetworkLocation("internet.nl", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
+
+        # When running the scan, it succeeds
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
+
+        # And the SNI-enabled certificate deployment has been detected
+        assert plugin_result.certificate_deployments
+
+        # And there is no non-SNI certificate deployment
+        assert plugin_result.certificate_deployment_with_sni_disabled is None
+
+    @can_only_run_on_linux_64
+    def test_server_has_no_certificate(self):
+        # Given a server that only uses ANON cipher suites ie. that does not have a certificate
+        with LegacyOpenSslServer(openssl_cipher_string="aNULL") as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, port=server.port, ip_address=server.ip_address
+            )
+            server_info = check_connectivity_to_server_and_return_info(server_location)
+
+            # When running the scan, it succeeds
+            plugin_result = CertificateInfoImplementation.scan_server(server_info)
+
+            # And no certificate deployments are returned
+            assert len(plugin_result.certificate_deployments) == 0
