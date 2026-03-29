@@ -132,6 +132,7 @@ class TestHttpHeadersPlugin:
 class _MockHttpResponse(HTTPResponse):
     status: int
     _headers: Dict[str, str]
+    fp: None = None  # type: ignore
 
     def getheader(self, name: str, default=None):
         """Replicate HTTPResponse's API."""
